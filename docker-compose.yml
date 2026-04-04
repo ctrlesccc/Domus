@@ -1,0 +1,26 @@
+services:
+  domus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: your-dockerhub-user/domus:latest
+    container_name: domus
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CLIENT_URL: http://localhost:4000
+      DATABASE_URL: file:./dev.db
+    volumes:
+      - domus_prisma:/app/prisma
+      - domus_storage:/app/storage
+      - domus_backups:/app/backups
+
+volumes:
+  domus_prisma:
+  domus_storage:
+  domus_backups:

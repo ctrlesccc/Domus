@@ -2,6 +2,26 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.5.0] - 2026-04-04
+
+### Added
+- Drag-and-drop dossierindeling op de dossierpagina voor documenten, contacten en verplichtingen.
+- Dossier-toewijzing via een directe serveractie zonder eerst formulieren te openen.
+
+### Changed
+- Helpscherm volledig bijgewerkt naar de actuele functionaliteit van dashboard, verplichtingen, instellingen, audit en dossiers.
+- Gebruiksuitleg uitgebreid met nieuwe informatie over betaalwijzen, afschrijvingsplanning, klikbare kostenlegenda en drag-and-drop dossierbeheer.
+
+### Fixed
+- Auditlog-layout verbeterd zodat wijzigingsdetails weer leesbaar en netjes afbreekbaar worden weergegeven.
+- Auditkaarten responsiever gemaakt met een stabielere verdeling tussen metadata en detailweergave.
+
+## [1.2.1] - 2026-04-04
+
+### Fixed
+- Auditlog-layout verbeterd zodat wijzigingsdetails weer leesbaar en netjes afbreekbaar worden weergegeven.
+- Auditkaarten responsiever gemaakt met een stabielere verdeling tussen metadata en detailweergave.
+
 ## [1.2.0] - 2026-04-04
 
 ### Added

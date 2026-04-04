@@ -4,12 +4,12 @@ const modules = [
   {
     title: "Dashboard",
     description:
-      "Het dashboard bundelt signalen, kosten, importwachtrij en datakwaliteit in een werkoverzicht. Je ziet direct welke documenten of verplichtingen aandacht nodig hebben.",
+      "Het dashboard bundelt signalen, komende afschrijvingen, kostenverdeling, importwachtrij en datakwaliteit in één werkoverzicht. Je ziet direct welke documenten of verplichtingen aandacht nodig hebben.",
   },
   {
     title: "Documenten",
     description:
-      "Beheer documenten met preview, versiebeheer, gekoppelde contacten, verplichtingen, dossierindeling en statusbewaking. Nieuwe versies blijven netjes gegroepeerd.",
+      "Beheer documenten met preview, versiebeheer, gekoppelde contacten, verplichtingen, dossierindeling, statusbewaking en snelle filtering. Nieuwe versies blijven netjes gegroepeerd.",
   },
   {
     title: "Contacten",
@@ -19,7 +19,7 @@ const modules = [
   {
     title: "Verplichtingen",
     description:
-      "Leg contracten, abonnementen, polissen en andere vaste lasten vast met bedrag, frequentie, evaluatiedatum, herinnering en einddatum.",
+      "Leg contracten, abonnementen, polissen en andere vaste lasten vast met bedrag, frequentie, betaalwijze, evaluatiedatum, herinnering, einddatum en geplande afschrijvingsdatum zonder jaar.",
   },
   {
     title: "Jaarplanning",
@@ -29,7 +29,7 @@ const modules = [
   {
     title: "Dossiers",
     description:
-      "Onderwerpen zoals Verzekeringen, Wonen, Zorg en Energie tonen documenten, contacten en verplichtingen in samenhang. Zo werk je per thema in plaats van per lijst.",
+      "Dossiers tonen documenten, contacten en verplichtingen in samenhang. Dossierwaarden zijn beheerbaar via Instellingen en items kunnen direct via drag-and-drop naar een ander dossier worden verplaatst.",
   },
   {
     title: "Import",
@@ -51,9 +51,18 @@ const importFlow = [
   "Pas na jouw akkoord wordt het bestand verplaatst naar de documentopslag en als definitief document opgenomen.",
 ];
 
+const dashboardHighlights = [
+  "Statistiekkaarten voor documenten, contacten, verplichtingen, importqueue en kosten.",
+  "Documenten die bijna verlopen en verplichtingen die binnenkort aflopen.",
+  "Komende afschrijvingen van de komende 30 dagen op basis van maand en dag.",
+  "Kosten per maand per type met klikbare legenda om onderliggende verplichtingen uit te klappen.",
+  "Datakwaliteitsblokken voor ontbrekende documentdata of verplichtingen zonder bedrag.",
+];
+
 const practicalTips = [
-  "Gebruik dossieronderwerpen consequent. Dat maakt de dossierweergave en dashboardanalyse veel sterker.",
+  "Gebruik dossiers consequent en sleep items in de dossierweergave direct naar het juiste onderwerp als iets verkeerd staat.",
   "Vul documentdatum, vervaldatum, reviewdatum en geboortedata zoveel mogelijk in. De planning wordt daardoor waardevoller.",
+  "Vul bij verplichtingen ook betaalwijze en geplande afschrijvingsdatum in. Het dashboard wordt daardoor bruikbaarder.",
   "Koppel documenten aan contacten en verplichtingen. Zo ontstaat een bruikbaar netwerk tussen bestanden, partijen en kosten.",
   "Gebruik de importqueue als intakeplek en niet als eindstation. Werk concepten zo snel mogelijk af voor een schoon systeem.",
   "Controleer regelmatig de auditlog, importqueue en blokken met ontbrekende gegevens op het dashboard.",
@@ -61,6 +70,7 @@ const practicalTips = [
 
 const settingsItems = [
   "Referentietypen beheren voor contacten, documenten en verplichtingen.",
+  "Beheerbare lijsten voor dossiers en betaalwijzen onderhouden.",
   "Back-ups maken van database en documentopslag.",
   "Prullenbak controleren en herstelbare items terugzetten.",
   "Weergavedichtheid kiezen tussen comfort en compact.",
@@ -72,7 +82,7 @@ export function HelpPage() {
       <PageHeader
         eyebrow="Help"
         title="Gebruik en mogelijkheden"
-        description="Praktische uitleg over de modules, importworkflow en beheerfuncties die momenteel beschikbaar zijn in DOMUS."
+        description="Praktische uitleg over de actuele modules, dossierworkflow, dashboardinzichten en beheerfuncties die momenteel beschikbaar zijn in DOMUS."
       />
 
       <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -98,6 +108,7 @@ export function HelpPage() {
             <div className="rounded-2xl bg-sand-50 px-4 py-3">Mobiel: compact hamburger-menu zodat de inhoud centraal blijft staan.</div>
             <div className="rounded-2xl bg-sand-50 px-4 py-3">Instellingen: centrale plek voor dichtheid, referenties, back-ups en beheer.</div>
             <div className="rounded-2xl bg-sand-50 px-4 py-3">Zoeken: snelle ingang om documenten, contacten en verplichtingen terug te vinden.</div>
+            <div className="rounded-2xl bg-sand-50 px-4 py-3">Dossiers: werk per onderwerp en verplaats items direct met drag-and-drop.</div>
           </div>
         </div>
       </section>
@@ -116,6 +127,18 @@ export function HelpPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <div className="app-card px-6 py-6">
+          <div className="app-section-kicker">Dashboard</div>
+          <h3 className="app-section-title mt-2">Wat je daar direct ziet</h3>
+          <div className="mt-4 space-y-3 text-sm text-stone-700">
+            {dashboardHighlights.map((item) => (
+              <div className="rounded-2xl bg-sand-50 px-4 py-3" key={item}>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="app-card px-6 py-6">
           <div className="app-section-kicker">Importflow</div>
           <h3 className="app-section-title mt-2">Van importmap naar definitief document</h3>
@@ -161,7 +184,11 @@ export function HelpPage() {
           <p className="mt-4 text-sm leading-7 text-stone-700">
             Dossiers bundelen losse gegevens tot een onderwerp. Als documenten, contacten en verplichtingen
             hetzelfde dossier hebben, kun je veel sneller per thema werken, bijvoorbeeld rond verzekeringen,
-            wonen, zorg of energie.
+            wonen, zorg of energie. Via Instellingen beheer je zelf welke dossiers beschikbaar zijn.
+          </p>
+          <p className="mt-4 text-sm leading-7 text-stone-700">
+            In de dossierweergave kun je documenten, contacten en verplichtingen direct slepen naar een ander
+            dossier. Daardoor kun je snel herindelen zonder eerst elk item apart te openen.
           </p>
         </div>
 
@@ -171,6 +198,10 @@ export function HelpPage() {
           <p className="mt-4 text-sm leading-7 text-stone-700">
             De auditlog houdt belangrijke wijzigingen bij. Verwijderde gegevens gaan eerst naar de prullenbak en
             blijven daar herstelbaar. Samen met back-ups geeft dat extra zekerheid bij dagelijks gebruik.
+          </p>
+          <p className="mt-4 text-sm leading-7 text-stone-700">
+            Ook wijzigingen aan dossierindeling en instellingen worden vastgelegd, zodat je beter kunt volgen
+            wie wat heeft aangepast.
           </p>
         </div>
       </section>
@@ -198,6 +229,17 @@ export function HelpPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="app-card px-6 py-6">
+        <div className="app-section-kicker">Verplichtingen</div>
+        <h3 className="app-section-title mt-2">Nieuwe aandachtspunten bij vaste lasten</h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4 text-sm text-stone-700">
+          <div className="rounded-2xl bg-sand-50 px-4 py-3">Bedragen mogen met punt of komma worden ingevoerd.</div>
+          <div className="rounded-2xl bg-sand-50 px-4 py-3">Betaalwijze is een beheerde dropdown in plaats van vrije tekst.</div>
+          <div className="rounded-2xl bg-sand-50 px-4 py-3">De geplande afschrijvingsdatum gebruikt maand en dag zonder vast jaar.</div>
+          <div className="rounded-2xl bg-sand-50 px-4 py-3">Dashboard en lijsten gebruiken deze gegevens direct voor signalering en inzicht.</div>
         </div>
       </section>
     </>

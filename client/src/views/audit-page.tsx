@@ -4,6 +4,18 @@ import { formatDate } from "../lib/format";
 import type { AuditEntry } from "../types";
 import { PageHeader } from "../ui/page-header";
 
+function formatAuditPayload(value: unknown) {
+  if (value == null) {
+    return "Geen detaildata beschikbaar";
+  }
+
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
 export function AuditPage() {
   const [items, setItems] = useState<AuditEntry[]>([]);
   const [entityType, setEntityType] = useState("");
@@ -68,8 +80,8 @@ export function AuditPage() {
               <div className="mt-3 space-y-3">
                 {entries.map((item) => (
                   <div className="rounded-[1.35rem] bg-sand-50/80 px-4 py-4" key={item.id}>
-                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                      <div>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)] xl:items-start">
+                      <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-600">{item.entityType}</span>
                           <span className="rounded-full bg-pine-700/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-pine-700">{item.action}</span>
@@ -82,8 +94,27 @@ export function AuditPage() {
                           Door: {item.actorDisplayName || item.actorUsername || "Onbekend"}
                         </div>
                       </div>
-                      <div className="max-w-xl rounded-2xl bg-white/80 px-4 py-3 text-xs leading-6 text-stone-600">
-                        {item.newValue ? JSON.stringify(item.newValue) : item.oldValue ? JSON.stringify(item.oldValue) : "Geen detaildata beschikbaar"}
+
+                      <div className="min-w-0 space-y-3">
+                        {item.newValue ? (
+                          <div className="rounded-2xl bg-white/85 px-4 py-3">
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Nieuwe waarde</div>
+                            <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs leading-6 text-stone-600">{formatAuditPayload(item.newValue)}</pre>
+                          </div>
+                        ) : null}
+
+                        {!item.newValue && item.oldValue ? (
+                          <div className="rounded-2xl bg-white/85 px-4 py-3">
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Vorige waarde</div>
+                            <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs leading-6 text-stone-600">{formatAuditPayload(item.oldValue)}</pre>
+                          </div>
+                        ) : null}
+
+                        {!item.newValue && !item.oldValue ? (
+                          <div className="rounded-2xl bg-white/85 px-4 py-3 text-xs leading-6 text-stone-600">
+                            Geen detaildata beschikbaar
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>

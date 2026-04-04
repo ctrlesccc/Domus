@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { defaultDossierOptions, getOptionList, sortAlphabetically } from "../lib/app-options.js";
 import { prisma } from "../lib/prisma.js";
 import { serializeContact, serializeDocument, serializeObligation } from "../lib/serializers.js";
@@ -23,6 +24,78 @@ function matchesKeywords(values: Array<string | null | undefined>, keywords: rea
 export const dossiersRouter = Router();
 
 dossiersRouter.use(requireAuth);
+
+dossiersRouter.post("/assign", async (request, response) => {
+  const entityType = String(request.body?.entityType ?? "").trim();
+  const entityId = Number(request.body?.entityId);
+  const dossierTopic = String(request.body?.dossierTopic ?? "").trim();
+
+  if (!["document", "contact", "obligation"].includes(entityType) || !Number.isInteger(entityId) || entityId <= 0) {
+    return response.status(400).json({ message: "Ongeldige dossierwijziging." });
+  }
+
+  if (entityType === "document") {
+    const existing = await prisma.document.findUnique({ where: { id: entityId } });
+    if (!existing || existing.deletedAt) {
+      return response.status(404).json({ message: "Document niet gevonden." });
+    }
+
+    await prisma.document.update({
+      where: { id: entityId },
+      data: { dossierTopic },
+    });
+    await writeAuditLog({
+      entityType: "document",
+      entityId,
+      action: "update_dossier",
+      ...auditActorFromRequest(request),
+      oldValue: { dossierTopic: existing.dossierTopic },
+      newValue: { dossierTopic },
+    });
+  }
+
+  if (entityType === "contact") {
+    const existing = await prisma.contact.findUnique({ where: { id: entityId } });
+    if (!existing || existing.deletedAt) {
+      return response.status(404).json({ message: "Contact niet gevonden." });
+    }
+
+    await prisma.contact.update({
+      where: { id: entityId },
+      data: { dossierTopic },
+    });
+    await writeAuditLog({
+      entityType: "contact",
+      entityId,
+      action: "update_dossier",
+      ...auditActorFromRequest(request),
+      oldValue: { dossierTopic: existing.dossierTopic },
+      newValue: { dossierTopic },
+    });
+  }
+
+  if (entityType === "obligation") {
+    const existing = await prisma.obligation.findUnique({ where: { id: entityId } });
+    if (!existing || existing.deletedAt) {
+      return response.status(404).json({ message: "Verplichting niet gevonden." });
+    }
+
+    await prisma.obligation.update({
+      where: { id: entityId },
+      data: { dossierTopic },
+    });
+    await writeAuditLog({
+      entityType: "obligation",
+      entityId,
+      action: "update_dossier",
+      ...auditActorFromRequest(request),
+      oldValue: { dossierTopic: existing.dossierTopic },
+      newValue: { dossierTopic },
+    });
+  }
+
+  return response.json({ success: true });
+});
 
 dossiersRouter.get("/", async (_request, response) => {
   const configuredDossiers = await getOptionList("options.dossiers", defaultDossierOptions);
@@ -96,9 +169,9 @@ dossiersRouter.get("/", async (_request, response) => {
       key: definition.key,
       title: definition.title,
       summary: `${dossierDocuments.length} documenten · ${dossierObligations.length} verplichtingen · ${dossierContacts.length} contacten`,
-      documents: sortAlphabetically(dossierDocuments.slice(0, 8), (item) => item.title).map(serializeDocument),
-      obligations: sortAlphabetically(dossierObligations.slice(0, 8), (item) => item.title).map(serializeObligation),
-      contacts: sortAlphabetically(dossierContacts.slice(0, 8), (item) => item.name).map(serializeContact),
+      documents: sortAlphabetically(dossierDocuments, (item) => item.title).map(serializeDocument),
+      obligations: sortAlphabetically(dossierObligations, (item) => item.title).map(serializeObligation),
+      contacts: sortAlphabetically(dossierContacts, (item) => item.name).map(serializeContact),
     };
   });
 

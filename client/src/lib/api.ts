@@ -33,6 +33,8 @@ export const api = {
   search: (q: string) => request<SearchResults>(`/api/search?q=${encodeURIComponent(q)}`),
   planning: () => request<PlanningOverview>("/api/planning"),
   dossiers: () => request<DossierOverview>("/api/dossiers"),
+  assignDossier: (payload: { entityType: "document" | "contact" | "obligation"; entityId: number; dossierTopic: string }) =>
+    request<{ success: true }>("/api/dossiers/assign", { method: "POST", body: JSON.stringify(payload) }),
   audit: (query = "") => request<AuditEntry[]>(`/api/audit${query}`),
   imports: () => request<ImportItem[]>("/api/imports"),
   syncImports: () => request<{ success: true }>("/api/imports/sync", { method: "POST" }),

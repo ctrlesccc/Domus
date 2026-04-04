@@ -4,12 +4,16 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
+import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
 export async function createApp() {
   const app = express();
+  const serverDistDir = path.dirname(fileURLToPath(import.meta.url));
+  const clientDist = path.resolve(serverDistDir, "..", "..", "client", "dist");
 
   app.use(
     helmet({
@@ -76,8 +80,7 @@ export async function createApp() {
   app.use("/api/dossiers", dossiersRouter);
   app.use("/api/imports", importsRouter);
 
-  if (process.env.NODE_ENV === "production") {
-    const clientDist = path.resolve(process.cwd(), "..", "client", "dist");
+  if (fs.existsSync(path.join(clientDist, "index.html"))) {
     app.use(express.static(clientDist));
     app.get(/^(?!\/api).*/, (_request, response) => {
       response.sendFile(path.join(clientDist, "index.html"));

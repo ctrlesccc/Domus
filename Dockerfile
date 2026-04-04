@@ -31,6 +31,9 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/client/dist ./client/dist
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/server/package.json ./server/package.json
+COPY --from=build /app/prisma/bootstrap.sql /opt/domus/bootstrap.sql
+COPY --from=build /app/prisma/seed.ts /opt/domus/seed.ts
+COPY --from=build /app/prisma/schema.prisma /opt/domus/schema.prisma
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \

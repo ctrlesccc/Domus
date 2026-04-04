@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { writeAuditLog } from "../lib/audit.js";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { prisma } from "../lib/prisma.js";
 import { referenceSchema } from "../lib/validators.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -25,7 +25,7 @@ contactTypesRouter.post("/", async (request, response) => {
       category: input.category ?? "BOTH",
     },
   });
-  await writeAuditLog({ entityType: "contact-type", entityId: item.id, action: "create", newValue: input });
+  await writeAuditLog({ entityType: "contact-type", entityId: item.id, action: "create", ...auditActorFromRequest(request), newValue: input });
   return response.status(201).json(item);
 });
 
@@ -42,7 +42,7 @@ contactTypesRouter.put("/:id", async (request, response) => {
       category: input.category ?? "BOTH",
     },
   });
-  await writeAuditLog({ entityType: "contact-type", entityId: item.id, action: "update", oldValue: existing, newValue: input });
+  await writeAuditLog({ entityType: "contact-type", entityId: item.id, action: "update", ...auditActorFromRequest(request), oldValue: existing, newValue: input });
   return response.json(item);
 });
 
@@ -55,6 +55,6 @@ contactTypesRouter.delete("/:id", async (request, response) => {
   }
 
   await prisma.contactType.delete({ where: { id } });
-  await writeAuditLog({ entityType: "contact-type", entityId: id, action: "delete", oldValue: existing });
+  await writeAuditLog({ entityType: "contact-type", entityId: id, action: "delete", ...auditActorFromRequest(request), oldValue: existing });
   return response.status(204).send();
 });

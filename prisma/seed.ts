@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import { PrismaClient, ContactKind, ContactTypeCategory, DossierTopic, ObligationFrequency } from "@prisma/client";
+import { PrismaClient, ContactKind, ContactTypeCategory, DossierTopic, ObligationFrequency, UserRole } from "@prisma/client";
 
 dotenv.config();
 
@@ -16,11 +16,15 @@ async function main() {
     update: {
       displayName,
       passwordHash: await bcrypt.hash(password, 10),
+      role: UserRole.ADMIN,
+      isActive: true,
     },
     create: {
       username,
       displayName,
       passwordHash: await bcrypt.hash(password, 10),
+      role: UserRole.ADMIN,
+      isActive: true,
     },
   });
 

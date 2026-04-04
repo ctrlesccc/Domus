@@ -1,0 +1,13 @@
+PRAGMA foreign_keys = ON;
+
+ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'ADMIN';
+ALTER TABLE users ADD COLUMN isActive BOOLEAN NOT NULL DEFAULT 1;
+ALTER TABLE users ADD COLUMN lastLoginAt DATETIME;
+
+ALTER TABLE audit_log ADD COLUMN actorUserId INTEGER;
+ALTER TABLE audit_log ADD COLUMN actorUsername TEXT;
+ALTER TABLE audit_log ADD COLUMN actorDisplayName TEXT;
+
+UPDATE users
+SET role = 'ADMIN'
+WHERE role IS NULL OR TRIM(role) = '';

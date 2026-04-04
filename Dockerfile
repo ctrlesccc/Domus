@@ -33,6 +33,7 @@ COPY --from=build /app/client/dist ./client/dist
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/server/package.json ./server/package.json
 COPY --from=build /app/prisma/bootstrap.sql /opt/domus/bootstrap.sql
+COPY --from=build /app/prisma/migrate_v6.sql /opt/domus/migrate_v6.sql
 COPY --from=build /app/prisma/seed.ts ./prisma-seed/seed.ts
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 

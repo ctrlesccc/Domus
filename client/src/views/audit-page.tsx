@@ -39,6 +39,7 @@ export function AuditPage() {
             <option value="document">Documenten</option>
             <option value="contact">Contacten</option>
             <option value="obligation">Verplichtingen</option>
+            <option value="user">Gebruikers</option>
             <option value="contact-type">Contactsoorten</option>
             <option value="document-type">Documentsoorten</option>
             <option value="obligation-type">Verplichtingstypen</option>
@@ -50,6 +51,8 @@ export function AuditPage() {
             <option value="update">Gewijzigd</option>
             <option value="delete">Verwijderd</option>
             <option value="version_create">Nieuwe versie</option>
+            <option value="change_password">Wachtwoord gewijzigd</option>
+            <option value="reset_password">Wachtwoord gereset</option>
           </select>
         </div>
         {error ? <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
@@ -72,7 +75,12 @@ export function AuditPage() {
                           <span className="rounded-full bg-pine-700/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-pine-700">{item.action}</span>
                         </div>
                         <div className="mt-2 font-medium text-ink-900">Record #{item.entityId}</div>
-                        <div className="mt-1 text-sm text-stone-500">{new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</div>
+                        <div className="mt-1 text-sm text-stone-500">
+                          {new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}
+                        </div>
+                        <div className="mt-1 text-sm text-stone-500">
+                          Door: {item.actorDisplayName || item.actorUsername || "Onbekend"}
+                        </div>
                       </div>
                       <div className="max-w-xl rounded-2xl bg-white/80 px-4 py-3 text-xs leading-6 text-stone-600">
                         {item.newValue ? JSON.stringify(item.newValue) : item.oldValue ? JSON.stringify(item.oldValue) : "Geen detaildata beschikbaar"}

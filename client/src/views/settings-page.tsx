@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
-import type { AppSetting, BackupOverview, ReferenceItem, TrashOverview } from "../types";
+import type { AppSetting, BackupOverview, ManagedUser, ReferenceItem, TrashOverview } from "../types";
+import { useAuth } from "../state/auth";
 import { PageHeader } from "../ui/page-header";
 
-type Section = "contactTypes" | "documentTypes" | "obligationTypes" | "settings" | "backups" | "trash";
+type Section = "account" | "users" | "contactTypes" | "documentTypes" | "obligationTypes" | "settings" | "backups" | "trash";
 type DensityMode = "comfortable" | "compact";
 
 export function SettingsPage() {
-  const [activeSection, setActiveSection] = useState<Section>("contactTypes");
+  const { user } = useAuth();
+  const [activeSection, setActiveSection] = useState<Section>("account");
   const [contactTypes, setContactTypes] = useState<ReferenceItem[]>([]);
   const [documentTypes, setDocumentTypes] = useState<ReferenceItem[]>([]);
   const [obligationTypes, setObligationTypes] = useState<ReferenceItem[]>([]);
   const [settings, setSettings] = useState<AppSetting[]>([]);
   const [backups, setBackups] = useState<BackupOverview | null>(null);
   const [trash, setTrash] = useState<TrashOverview | null>(null);
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [error, setError] = useState("");
   const [density, setDensity] = useState<DensityMode>(() => {
     if (typeof window === "undefined") {
@@ -26,13 +29,14 @@ export function SettingsPage() {
   });
 
   async function load() {
-    const [contactTypeItems, documentTypeItems, obligationTypeItems, settingItems, backupItems, trashItems] = await Promise.all([
+    const [contactTypeItems, documentTypeItems, obligationTypeItems, settingItems, backupItems, trashItems, userItems] = await Promise.all([
       api.contactTypes(),
       api.documentTypes(),
       api.obligationTypes(),
       api.settings(),
       api.backups(),
       api.trash(),
+      user?.role === "ADMIN" ? api.users() : Promise.resolve([]),
     ]);
 
     setContactTypes(contactTypeItems);
@@ -41,11 +45,12 @@ export function SettingsPage() {
     setSettings(settingItems);
     setBackups(backupItems);
     setTrash(trashItems);
+    setUsers(userItems);
   }
 
   useEffect(() => {
     load().catch((loadError) => setError(loadError.message));
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => {
     document.documentElement.dataset.density = density;
@@ -56,8 +61,8 @@ export function SettingsPage() {
     <>
       <PageHeader
         eyebrow="Instellingen"
-        title="Referentiebeheer"
-        description="Onderhoud contactsoorten, documentsoorten, verplichtingstypen en algemene applicatie-instellingen."
+        title="Beheer en account"
+        description="Beheer je account, gebruikers, referenties, back-ups en andere applicatie-instellingen."
       />
 
       {error ? <div className="app-card px-6 py-4 text-red-700">{error}</div> : null}
@@ -65,6 +70,8 @@ export function SettingsPage() {
       <section className="grid gap-3 xl:grid-cols-[240px_minmax(0,1fr)]">
         <div className="app-card p-4">
           {[
+            ["account", "Mijn account"],
+            ...(user?.role === "ADMIN" ? [["users", "Gebruikers"]] : []),
             ["contactTypes", "Contactsoorten"],
             ["documentTypes", "Documentsoorten"],
             ["obligationTypes", "Verplichtingstypen"],
@@ -89,6 +96,28 @@ export function SettingsPage() {
         </div>
 
         <div className="app-card px-6 py-5">
+          {activeSection === "account" ? (
+            <AccountPanel />
+          ) : null}
+
+          {activeSection === "users" && user?.role === "ADMIN" ? (
+            <UserManagementPanel
+              currentUserId={user.userId}
+              users={users}
+              onCreate={async (payload) => {
+                await api.createUser(payload);
+                await load();
+              }}
+              onResetPassword={async (id, payload) => {
+                await api.resetUserPassword(id, payload);
+              }}
+              onUpdate={async (id, payload) => {
+                await api.updateUser(id, payload);
+                await load();
+              }}
+            />
+          ) : null}
+
           {activeSection === "contactTypes" ? (
             <ReferenceEditor
               categoryEnabled
@@ -203,6 +232,220 @@ export function SettingsPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function AccountPanel() {
+  const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h3 className="text-lg font-semibold text-ink-900">Mijn account</h3>
+        <p className="mt-2 text-sm text-stone-600">Wijzig hier je wachtwoord voor dagelijkse toegang tot DOMUS.</p>
+      </div>
+
+      <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
+        <div className="grid app-form gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <label className="app-label">Huidig wachtwoord</label>
+            <input
+              className="app-input"
+              type="password"
+              value={form.currentPassword}
+              onChange={(event) => setForm({ ...form, currentPassword: event.target.value })}
+            />
+          </div>
+          <div>
+            <label className="app-label">Nieuw wachtwoord</label>
+            <input
+              className="app-input"
+              type="password"
+              value={form.newPassword}
+              onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
+            />
+          </div>
+          <div>
+            <label className="app-label">Bevestig nieuw wachtwoord</label>
+            <input
+              className="app-input"
+              type="password"
+              value={form.confirmPassword}
+              onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
+            />
+          </div>
+        </div>
+
+        {message ? <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
+        {error ? <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+
+        <div className="mt-4">
+          <button
+            className="app-button"
+            onClick={async () => {
+              setMessage("");
+              setError("");
+              try {
+                await api.changePassword(form);
+                setMessage("Wachtwoord succesvol gewijzigd.");
+                setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+              } catch (submissionError) {
+                setError(submissionError instanceof Error ? submissionError.message : "Wachtwoord wijzigen mislukt.");
+              }
+            }}
+            type="button"
+          >
+            Wachtwoord wijzigen
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UserManagementPanel({
+  users,
+  currentUserId,
+  onCreate,
+  onUpdate,
+  onResetPassword,
+}: {
+  users: ManagedUser[];
+  currentUserId: number;
+  onCreate: (payload: { username: string; displayName: string; password: string; role: "ADMIN" | "USER"; isActive: boolean }) => Promise<void>;
+  onUpdate: (id: number, payload: { displayName: string; role: "ADMIN" | "USER"; isActive: boolean }) => Promise<void>;
+  onResetPassword: (id: number, payload: { newPassword: string; confirmPassword: string }) => Promise<void>;
+}) {
+  const [newUser, setNewUser] = useState({
+    username: "",
+    displayName: "",
+    password: "",
+    role: "USER" as "ADMIN" | "USER",
+    isActive: true,
+  });
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h3 className="text-lg font-semibold text-ink-900">Gebruikersbeheer</h3>
+        <p className="mt-2 text-sm text-stone-600">Maak nieuwe gebruikers aan, beheer rollen en reset wachtwoorden wanneer nodig.</p>
+      </div>
+
+      <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
+        <div className="grid gap-3 lg:grid-cols-[1.1fr_1.2fr_1fr_120px_120px_auto]">
+          <input className="app-input min-w-0" placeholder="Gebruikersnaam" value={newUser.username} onChange={(event) => setNewUser({ ...newUser, username: event.target.value })} />
+          <input className="app-input min-w-0" placeholder="Weergavenaam" value={newUser.displayName} onChange={(event) => setNewUser({ ...newUser, displayName: event.target.value })} />
+          <input className="app-input min-w-0" placeholder="Tijdelijk wachtwoord" type="password" value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} />
+          <select className="app-select min-w-0" value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value as "ADMIN" | "USER" })}>
+            <option value="USER">Gebruiker</option>
+            <option value="ADMIN">Beheerder</option>
+          </select>
+          <label className="flex min-h-10 items-center gap-2 rounded-2xl bg-white px-3 text-sm text-stone-700">
+            <input checked={newUser.isActive} onChange={(event) => setNewUser({ ...newUser, isActive: event.target.checked })} type="checkbox" />
+            Actief
+          </label>
+          <button
+            className="app-button min-h-10 whitespace-nowrap"
+            onClick={async () => {
+              setMessage("");
+              setError("");
+              try {
+                await onCreate(newUser);
+                setMessage("Gebruiker aangemaakt.");
+                setNewUser({ username: "", displayName: "", password: "", role: "USER", isActive: true });
+              } catch (submissionError) {
+                setError(submissionError instanceof Error ? submissionError.message : "Gebruiker aanmaken mislukt.");
+              }
+            }}
+            type="button"
+          >
+            Aanmaken
+          </button>
+        </div>
+      </div>
+
+      {message ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
+      {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+
+      <div className="space-y-3">
+        {users.map((item) => (
+          <UserRow
+            currentUserId={currentUserId}
+            item={item}
+            key={item.id}
+            onResetPassword={onResetPassword}
+            onUpdate={onUpdate}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UserRow({
+  item,
+  currentUserId,
+  onUpdate,
+  onResetPassword,
+}: {
+  item: ManagedUser;
+  currentUserId: number;
+  onUpdate: (id: number, payload: { displayName: string; role: "ADMIN" | "USER"; isActive: boolean }) => Promise<void>;
+  onResetPassword: (id: number, payload: { newPassword: string; confirmPassword: string }) => Promise<void>;
+}) {
+  const [draft, setDraft] = useState({
+    displayName: item.displayName,
+    role: item.role,
+    isActive: item.isActive,
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  return (
+    <div className="rounded-[1.35rem] bg-white/65 p-4">
+      <div className="grid gap-3 xl:grid-cols-[1fr_1.1fr_140px_120px_auto_auto] xl:items-center">
+        <div>
+          <div className="font-medium text-ink-900">{item.username}</div>
+          <div className="mt-1 text-sm text-stone-500">
+            Laatste login: {item.lastLoginAt ? formatDate(item.lastLoginAt) : "Nog niet ingelogd"}
+          </div>
+        </div>
+        <input className="app-input min-w-0" value={draft.displayName} onChange={(event) => setDraft({ ...draft, displayName: event.target.value })} />
+        <select className="app-select min-w-0" value={draft.role} onChange={(event) => setDraft({ ...draft, role: event.target.value as "ADMIN" | "USER" })} disabled={item.id === currentUserId}>
+          <option value="USER">Gebruiker</option>
+          <option value="ADMIN">Beheerder</option>
+        </select>
+        <label className="flex min-h-10 items-center gap-2 rounded-2xl bg-sand-50/80 px-3 text-sm text-stone-700">
+          <input checked={draft.isActive} disabled={item.id === currentUserId} onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} type="checkbox" />
+          Actief
+        </label>
+        <button
+          className="app-button-ghost min-h-10 whitespace-nowrap px-3"
+          onClick={() => onUpdate(item.id, { displayName: draft.displayName, role: draft.role, isActive: draft.isActive })}
+          type="button"
+        >
+          Opslaan
+        </button>
+        <button className="app-button-secondary min-h-10 whitespace-nowrap px-3" onClick={async () => {
+          if (!draft.newPassword || !draft.confirmPassword) {
+            return;
+          }
+          await onResetPassword(item.id, { newPassword: draft.newPassword, confirmPassword: draft.confirmPassword });
+          setDraft({ ...draft, newPassword: "", confirmPassword: "" });
+        }} type="button">
+          Reset wachtwoord
+        </button>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <input className="app-input" placeholder="Nieuw wachtwoord" type="password" value={draft.newPassword} onChange={(event) => setDraft({ ...draft, newPassword: event.target.value })} />
+        <input className="app-input" placeholder="Bevestig nieuw wachtwoord" type="password" value={draft.confirmPassword} onChange={(event) => setDraft({ ...draft, confirmPassword: event.target.value })} />
+      </div>
+    </div>
   );
 }
 

@@ -8,6 +8,7 @@ declare global {
         userId: number;
         username: string;
         displayName: string;
+        role: "ADMIN" | "USER";
       };
     }
   }
@@ -26,4 +27,16 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
   } catch {
     return response.status(401).json({ message: "Session expired." });
   }
+}
+
+export function requireAdmin(request: Request, response: Response, next: NextFunction) {
+  if (!request.auth) {
+    return response.status(401).json({ message: "Authentication required." });
+  }
+
+  if (request.auth.role !== "ADMIN") {
+    return response.status(403).json({ message: "Administrator access required." });
+  }
+
+  next();
 }

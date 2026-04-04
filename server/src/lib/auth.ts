@@ -6,6 +6,7 @@ export type AuthPayload = {
   userId: number;
   username: string;
   displayName: string;
+  role: "ADMIN" | "USER";
 };
 
 const cookieName = "domus_token";

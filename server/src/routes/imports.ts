@@ -2,7 +2,7 @@ import { Router } from "express";
 import crypto from "node:crypto";
 import { ImportStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-import { writeAuditLog } from "../lib/audit.js";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { syncImportFolder } from "../lib/import-watcher.js";
 import { persistImportedFile } from "../lib/storage.js";
 import { documentSchema } from "../lib/validators.js";
@@ -114,6 +114,7 @@ importsRouter.post("/:id/finalize", async (request, response) => {
     entityType: "import-document",
     entityId: id,
     action: "finalize",
+    ...auditActorFromRequest(request),
     oldValue: item,
     newValue: {
       documentId: document.id,

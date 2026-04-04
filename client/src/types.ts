@@ -1,7 +1,22 @@
 export type User = {
+  id?: number;
   userId: number;
   username: string;
   displayName: string;
+  role: "ADMIN" | "USER";
+  isActive?: boolean;
+  lastLoginAt?: string | null;
+};
+
+export type ManagedUser = {
+  id: number;
+  username: string;
+  displayName: string;
+  role: "ADMIN" | "USER";
+  isActive: boolean;
+  lastLoginAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ReferenceItem = {
@@ -230,6 +245,9 @@ export type AuditEntry = {
   entityType: string;
   entityId: number;
   action: string;
+  actorUserId?: number | null;
+  actorUsername?: string | null;
+  actorDisplayName?: string | null;
   oldValue?: unknown;
   newValue?: unknown;
   createdAt: string;

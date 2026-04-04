@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { writeAuditLog } from "../lib/audit.js";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { prisma } from "../lib/prisma.js";
 import { serializeContact } from "../lib/serializers.js";
 import { contactSchema } from "../lib/validators.js";
@@ -70,7 +70,7 @@ contactsRouter.post("/", async (request, response) => {
     data: input,
     include: { contactType: true },
   });
-  await writeAuditLog({ entityType: "contact", entityId: item.id, action: "create", newValue: input });
+  await writeAuditLog({ entityType: "contact", entityId: item.id, action: "create", ...auditActorFromRequest(request), newValue: input });
   return response.status(201).json(serializeContact(item));
 });
 
@@ -83,7 +83,7 @@ contactsRouter.put("/:id", async (request, response) => {
     data: input,
     include: { contactType: true },
   });
-  await writeAuditLog({ entityType: "contact", entityId: item.id, action: "update", oldValue: existing, newValue: input });
+  await writeAuditLog({ entityType: "contact", entityId: item.id, action: "update", ...auditActorFromRequest(request), oldValue: existing, newValue: input });
   return response.json(serializeContact(item));
 });
 
@@ -94,6 +94,6 @@ contactsRouter.delete("/:id", async (request, response) => {
     where: { id },
     data: { deletedAt: new Date() },
   });
-  await writeAuditLog({ entityType: "contact", entityId: id, action: "delete", oldValue: existing });
+  await writeAuditLog({ entityType: "contact", entityId: id, action: "delete", ...auditActorFromRequest(request), oldValue: existing });
   return response.status(204).send();
 });

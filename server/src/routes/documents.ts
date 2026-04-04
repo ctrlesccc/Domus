@@ -3,7 +3,7 @@ import multer from "multer";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { writeAuditLog } from "../lib/audit.js";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { prisma } from "../lib/prisma.js";
 import { serializeDocument } from "../lib/serializers.js";
 import { assertUploadIsAllowed, deleteStoredFile, persistUpload } from "../lib/storage.js";
@@ -142,6 +142,7 @@ documentsRouter.post("/", upload.single("file"), async (request, response) => {
     entityType: "document",
     entityId: item.id,
     action: "create",
+    ...auditActorFromRequest(request),
     newValue: {
       title: input.title,
       documentTypeId: input.documentTypeId,
@@ -215,6 +216,7 @@ documentsRouter.put("/:id", upload.single("file"), async (request, response) => 
       entityType: "document",
       entityId: newVersion.id,
       action: "version_create",
+      ...auditActorFromRequest(request),
       oldValue: existing,
       newValue: {
         title: input.title,
@@ -279,6 +281,7 @@ documentsRouter.put("/:id", upload.single("file"), async (request, response) => 
     entityType: "document",
     entityId: item.id,
     action: "update",
+    ...auditActorFromRequest(request),
     oldValue: existing,
     newValue: {
       title: input.title,
@@ -303,7 +306,7 @@ documentsRouter.delete("/:id", async (request, response) => {
   if (permanent) {
     await prisma.document.delete({ where: { id } });
     await deleteStoredFile(existing.storagePath);
-    await writeAuditLog({ entityType: "document", entityId: id, action: "delete_permanent", oldValue: existing });
+    await writeAuditLog({ entityType: "document", entityId: id, action: "delete_permanent", ...auditActorFromRequest(request), oldValue: existing });
     return response.status(204).send();
   }
 
@@ -314,7 +317,7 @@ documentsRouter.delete("/:id", async (request, response) => {
     },
   });
 
-  await writeAuditLog({ entityType: "document", entityId: id, action: "delete", oldValue: existing });
+  await writeAuditLog({ entityType: "document", entityId: id, action: "delete", ...auditActorFromRequest(request), oldValue: existing });
   return response.status(204).send();
 });
 

@@ -30,6 +30,41 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((input) => input.newPassword === input.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
+export const userCreateSchema = z.object({
+  username: z.string().trim().min(3),
+  displayName: z.string().trim().min(2),
+  password: z.string().min(8),
+  role: z.enum(["ADMIN", "USER"]).default("USER"),
+  isActive: optionalBoolean.default(true),
+});
+
+export const userUpdateSchema = z.object({
+  displayName: z.string().trim().min(2),
+  role: z.enum(["ADMIN", "USER"]),
+  isActive: optionalBoolean.default(true),
+});
+
+export const userResetPasswordSchema = z
+  .object({
+    newPassword: z.string().min(8),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((input) => input.newPassword === input.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
 export const referenceSchema = z.object({
   name: z.string().trim().min(1),
   sortOrder: z.coerce.number().int().min(0).default(0),

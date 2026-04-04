@@ -22,4 +22,9 @@ if [ "$needs_init" = "true" ]; then
   )
 fi
 
+if ! sqlite3 "$DB_PATH" "SELECT role FROM users LIMIT 1;" >/dev/null 2>&1; then
+  echo "Applying DOMUS user/audit migration..."
+  sqlite3 "$DB_PATH" < /opt/domus/migrate_v6.sql
+fi
+
 exec "$@"

@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   passwordHash TEXT NOT NULL,
   displayName TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'ADMIN',
+  isActive BOOLEAN NOT NULL DEFAULT 1,
+  lastLoginAt DATETIME,
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -147,6 +150,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
   entityType TEXT NOT NULL,
   entityId INTEGER NOT NULL,
   action TEXT NOT NULL,
+  actorUserId INTEGER,
+  actorUsername TEXT,
+  actorDisplayName TEXT,
   oldValue TEXT,
   newValue TEXT,
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

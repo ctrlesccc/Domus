@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { writeAuditLog } from "../lib/audit.js";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { prisma } from "../lib/prisma.js";
 import { serializeObligation } from "../lib/serializers.js";
 import { obligationSchema } from "../lib/validators.js";
@@ -109,7 +109,7 @@ obligationsRouter.post("/", async (request, response) => {
     },
   });
 
-  await writeAuditLog({ entityType: "obligation", entityId: item.id, action: "create", newValue: input });
+  await writeAuditLog({ entityType: "obligation", entityId: item.id, action: "create", ...auditActorFromRequest(request), newValue: input });
   return response.status(201).json(serializeObligation(item));
 });
 
@@ -152,7 +152,7 @@ obligationsRouter.put("/:id", async (request, response) => {
     },
   });
 
-  await writeAuditLog({ entityType: "obligation", entityId: item.id, action: "update", oldValue: existing, newValue: input });
+  await writeAuditLog({ entityType: "obligation", entityId: item.id, action: "update", ...auditActorFromRequest(request), oldValue: existing, newValue: input });
   return response.json(serializeObligation(item));
 });
 
@@ -163,6 +163,6 @@ obligationsRouter.delete("/:id", async (request, response) => {
     where: { id },
     data: { deletedAt: new Date() },
   });
-  await writeAuditLog({ entityType: "obligation", entityId: id, action: "delete", oldValue: existing });
+  await writeAuditLog({ entityType: "obligation", entityId: id, action: "delete", ...auditActorFromRequest(request), oldValue: existing });
   return response.status(204).send();
 });

@@ -1,4 +1,4 @@
-import type { AppSetting, AuditEntry, BackupOverview, Contact, DashboardData, DossierOverview, DocumentItem, ImportItem, Obligation, PlanningOverview, ReferenceItem, SearchResults, TrashOverview, User } from "../types";
+import type { AppSetting, AuditEntry, BackupOverview, Contact, DashboardData, DossierOverview, DocumentItem, ImportItem, ManagedUser, Obligation, PlanningOverview, ReferenceItem, SearchResults, TrashOverview, User } from "../types";
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -27,6 +27,8 @@ export const api = {
     request<{ user: User }>("/api/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   logout: () => request<{ success: true }>("/api/auth/logout", { method: "POST" }),
   me: () => request<{ user: User }>("/api/auth/me"),
+  changePassword: (payload: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
+    request<{ success: true }>("/api/auth/change-password", { method: "POST", body: JSON.stringify(payload) }),
   dashboard: () => request<DashboardData>("/api/dashboard"),
   search: (q: string) => request<SearchResults>(`/api/search?q=${encodeURIComponent(q)}`),
   planning: () => request<PlanningOverview>("/api/planning"),
@@ -80,6 +82,13 @@ export const api = {
   settings: () => request<AppSetting[]>("/api/settings"),
   updateSetting: (id: number, payload: { key: string; value: string }) =>
     request<AppSetting>(`/api/settings/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  users: () => request<ManagedUser[]>("/api/users"),
+  createUser: (payload: { username: string; displayName: string; password: string; role: "ADMIN" | "USER"; isActive: boolean }) =>
+    request<ManagedUser>("/api/users", { method: "POST", body: JSON.stringify(payload) }),
+  updateUser: (id: number, payload: { displayName: string; role: "ADMIN" | "USER"; isActive: boolean }) =>
+    request<ManagedUser>(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  resetUserPassword: (id: number, payload: { newPassword: string; confirmPassword: string }) =>
+    request<{ success: true }>(`/api/users/${id}/reset-password`, { method: "POST", body: JSON.stringify(payload) }),
   trash: () => request<TrashOverview>("/api/trash"),
   restoreTrashItem: (entityType: "documents" | "obligations" | "contacts", id: number) =>
     request(`/api/trash/${entityType}/${id}/restore`, { method: "POST" }),

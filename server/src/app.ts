@@ -14,6 +14,12 @@ export async function createApp() {
   app.use(
     helmet({
       crossOriginResourcePolicy: false,
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          "upgrade-insecure-requests": null,
+        },
+      },
     }),
   );
   app.use(

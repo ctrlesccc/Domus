@@ -126,10 +126,7 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Sleepbaar</div>
-                        <div className="text-stone-400">::</div>
-                      </div>
+                      <div className="mb-2 flex items-center justify-end gap-3 text-stone-400">::</div>
                       <Link className="block" to={`/documents/${item.id}`}>
                         <div className="font-medium text-ink-900">{item.title}</div>
                         <div className="mt-1 text-sm text-stone-500">{item.documentType.name} · {formatDate(item.expiryDate || item.documentDate)}</div>
@@ -163,10 +160,7 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Sleepbaar</div>
-                        <div className="text-stone-400">::</div>
-                      </div>
+                      <div className="mb-2 flex items-center justify-end gap-3 text-stone-400">::</div>
                       <Link className="block" to={`/obligations/${item.id}`}>
                         <div className="font-medium text-ink-900">{item.title}</div>
                         <div className="mt-1 text-sm text-stone-500">{item.obligationType.name} · {formatCurrency(item.amount, item.currency)}</div>
@@ -200,10 +194,7 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Sleepbaar</div>
-                        <div className="text-stone-400">::</div>
-                      </div>
+                      <div className="mb-2 flex items-center justify-end gap-3 text-stone-400">::</div>
                       <Link className="block" to={item.kind === "PERSONAL" ? `/personal-contacts/${item.id}` : `/contacts/${item.id}`}>
                         <div className="font-medium text-ink-900">{item.name}</div>
                         <div className="mt-1 text-sm text-stone-500">{item.contactType.name} · {item.city || item.email || "Geen extra gegevens"}</div>

@@ -170,11 +170,19 @@ export const obligationSchema = obligationBaseSchema
     path: ["endDate"],
   })
   .refine(
-    (input) =>
-      (!input.plannedChargeDay && !input.plannedChargeMonth) ||
-      (Boolean(input.plannedChargeDay) && Boolean(input.plannedChargeMonth)),
+    (input) => {
+      if (!input.plannedChargeDay && !input.plannedChargeMonth) {
+        return true;
+      }
+
+      if (input.frequency === "MONTHLY" || input.frequency === "QUARTERLY") {
+        return Boolean(input.plannedChargeDay);
+      }
+
+      return Boolean(input.plannedChargeDay) && Boolean(input.plannedChargeMonth);
+    },
     {
-      message: "Planned charge date requires both day and month.",
+      message: "Planned charge date is incomplete for this frequency.",
       path: ["plannedChargeDay"],
     },
   );

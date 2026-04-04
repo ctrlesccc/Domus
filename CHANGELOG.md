@@ -2,6 +2,13 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.5.1] - 2026-04-04
+
+### Changed
+- Afschrijvingsplanning verfijnd: bij maandelijkse en kwartaalverplichtingen is nu alleen de dag nodig, terwijl jaarlijkse en eenmalige posten ook een maand blijven gebruiken.
+- Dashboardplanning aangepast zodat maandelijkse en kwartaalverplichtingen zonder ingevulde maand toch correct onder komende afschrijvingen verschijnen.
+- Dossierweergave visueel rustiger gemaakt door de extra tekst `Sleepbaar` te verwijderen.
+
 ## [1.5.0] - 2026-04-04
 
 ### Added

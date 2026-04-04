@@ -9,6 +9,48 @@ export const dashboardRouter = Router();
 
 dashboardRouter.use(requireAuth);
 
+function sameOrLaterThanToday(candidate: Date, today: Date) {
+  return candidate.getTime() >= new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+}
+
+function buildNextPlannedDate(input: {
+  frequency: "MONTHLY" | "QUARTERLY" | "YEARLY" | "ONE_TIME";
+  plannedChargeDay?: number | null;
+  plannedChargeMonth?: number | null;
+  startDate?: Date | null;
+  today: Date;
+}) {
+  const { frequency, plannedChargeDay, plannedChargeMonth, startDate, today } = input;
+  if (!plannedChargeDay) {
+    return null;
+  }
+
+  if (frequency === "MONTHLY") {
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), plannedChargeDay);
+    return sameOrLaterThanToday(thisMonth, today)
+      ? thisMonth
+      : new Date(today.getFullYear(), today.getMonth() + 1, plannedChargeDay);
+  }
+
+  if (frequency === "QUARTERLY") {
+    const baseMonth = startDate?.getMonth() ?? (plannedChargeMonth ? plannedChargeMonth - 1 : today.getMonth());
+    const candidateMonths = [baseMonth, baseMonth + 3, baseMonth + 6, baseMonth + 9]
+      .map((month) => new Date(today.getFullYear(), month, plannedChargeDay))
+      .sort((left, right) => left.getTime() - right.getTime());
+    const upcoming = candidateMonths.find((candidate) => sameOrLaterThanToday(candidate, today));
+    return upcoming ?? new Date(today.getFullYear() + 1, baseMonth, plannedChargeDay);
+  }
+
+  if (!plannedChargeMonth) {
+    return null;
+  }
+
+  const thisYear = new Date(today.getFullYear(), plannedChargeMonth - 1, plannedChargeDay);
+  return sameOrLaterThanToday(thisYear, today)
+    ? thisYear
+    : new Date(today.getFullYear() + 1, plannedChargeMonth - 1, plannedChargeDay);
+}
+
 dashboardRouter.get("/", async (_request, response) => {
   const today = new Date();
   const next30Days = new Date();
@@ -118,15 +160,21 @@ dashboardRouter.get("/", async (_request, response) => {
   ]);
 
   const upcomingPlannedCharges = activeObligations
-    .filter((item) => item.plannedChargeDay && item.plannedChargeMonth)
+    .filter((item) => item.plannedChargeDay)
     .map((item) => {
-      const thisYear = new Date(year, (item.plannedChargeMonth ?? 1) - 1, item.plannedChargeDay ?? 1);
-      const nextDate = thisYear < today ? new Date(year + 1, (item.plannedChargeMonth ?? 1) - 1, item.plannedChargeDay ?? 1) : thisYear;
+      const nextDate = buildNextPlannedDate({
+        frequency: item.frequency,
+        plannedChargeDay: item.plannedChargeDay,
+        plannedChargeMonth: item.plannedChargeMonth,
+        startDate: item.startDate,
+        today,
+      });
       return {
         obligation: item,
         plannedDate: nextDate,
       };
     })
+    .filter((item): item is { obligation: (typeof activeObligations)[number]; plannedDate: Date } => Boolean(item.plannedDate))
     .filter((item) => item.plannedDate >= today && item.plannedDate <= next30Days)
     .sort((left, right) => left.plannedDate.getTime() - right.plannedDate.getTime())
     .slice(0, 8)

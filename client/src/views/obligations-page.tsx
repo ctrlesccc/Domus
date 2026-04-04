@@ -110,6 +110,8 @@ export function ObligationsPage() {
   const selectedItem = useMemo(() => items.find((item) => String(item.id) === selectedId), [items, selectedId]);
   const dossiers = dossierSelectOptions(settings);
   const paymentMethods = paymentMethodOptions(settings);
+  const needsPlannedMonth = form.frequency === "YEARLY" || form.frequency === "ONE_TIME";
+  const usesQuarterPattern = form.frequency === "QUARTERLY";
   const sortedItems = useMemo(() => {
     const sorted = [...items].sort((left, right) => {
       const direction = sortDirection === "asc" ? 1 : -1;
@@ -246,7 +248,7 @@ export function ObligationsPage() {
                   amount: Number(form.amount.replace(",", ".")),
                   cancellationPeriodDays: form.cancellationPeriodDays ? Number(form.cancellationPeriodDays) : undefined,
                   plannedChargeDay: form.plannedChargeDay ? Number(form.plannedChargeDay) : undefined,
-                  plannedChargeMonth: form.plannedChargeMonth ? Number(form.plannedChargeMonth) : undefined,
+                  plannedChargeMonth: needsPlannedMonth && form.plannedChargeMonth ? Number(form.plannedChargeMonth) : undefined,
                   documentIds: form.documentIds.map(Number),
                 };
 
@@ -307,7 +309,20 @@ export function ObligationsPage() {
               </div>
               <div>
                 <label className="app-label">Frequentie</label>
-                <select className="app-select" value={form.frequency} onChange={(event) => setForm({ ...form, frequency: event.target.value })}>
+                <select
+                  className="app-select"
+                  value={form.frequency}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      frequency: event.target.value,
+                      plannedChargeMonth:
+                        event.target.value === "YEARLY" || event.target.value === "ONE_TIME"
+                          ? current.plannedChargeMonth
+                          : "",
+                    }))
+                  }
+                >
                   <option value="MONTHLY">Maandelijks</option>
                   <option value="QUARTERLY">Per kwartaal</option>
                   <option value="YEARLY">Jaarlijks</option>
@@ -357,18 +372,7 @@ export function ObligationsPage() {
               </select>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div>
-                <label className="app-label">Afschrijving maand</label>
-                <select className="app-select" value={form.plannedChargeMonth} onChange={(event) => setForm({ ...form, plannedChargeMonth: event.target.value })}>
-                  <option value="">Geen planning</option>
-                  {Array.from({ length: 12 }, (_, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      {new Date(2000, index, 1).toLocaleString("nl-NL", { month: "long" })}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className={`grid gap-4 md:grid-cols-2 ${needsPlannedMonth ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
               <div>
                 <label className="app-label">Afschrijving dag</label>
                 <select className="app-select" value={form.plannedChargeDay} onChange={(event) => setForm({ ...form, plannedChargeDay: event.target.value })}>
@@ -379,7 +383,26 @@ export function ObligationsPage() {
                     </option>
                   ))}
                 </select>
+                {form.frequency === "MONTHLY" ? (
+                  <p className="mt-2 text-xs text-stone-500">Bij maandelijks is alleen de dag nodig voor de planning op het dashboard.</p>
+                ) : null}
+                {usesQuarterPattern ? (
+                  <p className="mt-2 text-xs text-stone-500">Bij per kwartaal gebruikt DOMUS de dag samen met de startdatum als kwartaalritme.</p>
+                ) : null}
               </div>
+              {needsPlannedMonth ? (
+                <div>
+                  <label className="app-label">Afschrijving maand</label>
+                  <select className="app-select" value={form.plannedChargeMonth} onChange={(event) => setForm({ ...form, plannedChargeMonth: event.target.value })}>
+                    <option value="">Geen planning</option>
+                    {Array.from({ length: 12 }, (_, index) => (
+                      <option key={index + 1} value={index + 1}>
+                        {new Date(2000, index, 1).toLocaleString("nl-NL", { month: "long" })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               <div>
                 <label className="app-label">Opzegtermijn (dagen)</label>
                 <input className="app-input" min="0" type="number" value={form.cancellationPeriodDays} onChange={(event) => setForm({ ...form, cancellationPeriodDays: event.target.value })} />

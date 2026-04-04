@@ -78,7 +78,7 @@ export function DashboardPage() {
         ))}
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[1fr_1fr_0.9fr]">
+      <section className="grid gap-3 xl:grid-cols-[1fr_1fr]">
         <div className="app-card flex min-h-52 flex-col px-6 py-5">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -123,30 +123,6 @@ export function DashboardPage() {
               ))
             ) : (
               <p className="text-sm text-stone-500">Geen contracten die binnenkort aflopen.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="app-section-kicker">Planning</div>
-              <h3 className="app-section-title mt-2">Komende afschrijvingen (30 dagen)</h3>
-            </div>
-            <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">PLN</div>
-          </div>
-          <div className="mt-4 flex-1 space-y-3">
-            {data.upcomingPlannedCharges.length ? (
-              data.upcomingPlannedCharges.map((item) => (
-                <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
-                  <div className="font-medium text-ink-900">{item.title}</div>
-                  <div className="mt-1 text-sm text-stone-500">
-                    {item.obligationType.name} · {formatDate(item.plannedDate)} · {formatCurrency(item.amount, item.currency)}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-stone-500">Geen geplande afschrijvingen in de komende 30 dagen.</p>
             )}
           </div>
         </div>
@@ -227,20 +203,46 @@ export function DashboardPage() {
         </div>
       </section>
 
-      <section className="app-card px-6 py-5">
-        <div className="app-section-kicker">Verdeling</div>
-        <h3 className="app-section-title mt-2">Kosten per maand per type</h3>
-        {data.annualCostByType.length ? (
-          <CostBreakdownChart
-            expandedTypes={expandedTypes}
-            items={data.annualCostByType}
-            onToggleType={(typeName) =>
-              setExpandedTypes((current) => (current.includes(typeName) ? current.filter((item) => item !== typeName) : [...current, typeName]))
-            }
-          />
-        ) : (
-          <p className="mt-4 text-sm text-stone-500">Nog geen actieve verplichtingen voor kostenanalyse.</p>
-        )}
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <div className="app-card px-6 py-5">
+          <div className="app-section-kicker">Verdeling</div>
+          <h3 className="app-section-title mt-2">Kosten per maand per type</h3>
+          {data.annualCostByType.length ? (
+            <CostBreakdownChart
+              expandedTypes={expandedTypes}
+              items={data.annualCostByType}
+              onToggleType={(typeName) =>
+                setExpandedTypes((current) => (current.includes(typeName) ? current.filter((item) => item !== typeName) : [...current, typeName]))
+              }
+            />
+          ) : (
+            <p className="mt-4 text-sm text-stone-500">Nog geen actieve verplichtingen voor kostenanalyse.</p>
+          )}
+        </div>
+
+        <div className="app-card flex min-h-52 flex-col px-6 py-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="app-section-kicker">Planning</div>
+              <h3 className="app-section-title mt-2">Komende afschrijvingen (30 dagen)</h3>
+            </div>
+            <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">PLN</div>
+          </div>
+          <div className="mt-4 flex-1 space-y-3">
+            {data.upcomingPlannedCharges.length ? (
+              data.upcomingPlannedCharges.map((item) => (
+                <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
+                  <div className="font-medium text-ink-900">{item.title}</div>
+                  <div className="mt-1 text-sm text-stone-500">
+                    {item.obligationType.name} · {formatDate(item.plannedDate)} · {formatCurrency(item.amount, item.currency)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-stone-500">Geen geplande afschrijvingen in de komende 30 dagen.</p>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="app-card px-6 py-5">

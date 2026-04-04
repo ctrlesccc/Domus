@@ -2,6 +2,11 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.5.2] - 2026-04-04
+
+### Changed
+- Dashboardindeling aangepast zodat het blok `Planning` nu rechts naast `Verdeling` staat.
+
 ## [1.5.1] - 2026-04-04
 
 ### Changed

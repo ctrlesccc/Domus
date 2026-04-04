@@ -16,11 +16,6 @@ services:
       CLIENT_URL: http://localhost:4000
       DATABASE_URL: file:./dev.db
     volumes:
-      - domus_prisma:/app/prisma
-      - domus_storage:/app/storage
-      - domus_backups:/app/backups
-
-volumes:
-  domus_prisma:
-  domus_storage:
-  domus_backups:
+      - ./data/prisma:/app/prisma
+      - ./data/storage:/app/storage
+      - ./data/backups:/app/backups

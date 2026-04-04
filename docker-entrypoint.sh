@@ -27,4 +27,9 @@ if ! sqlite3 "$DB_PATH" "SELECT role FROM users LIMIT 1;" >/dev/null 2>&1; then
   sqlite3 "$DB_PATH" < /opt/domus/migrate_v6.sql
 fi
 
+if ! sqlite3 "$DB_PATH" "SELECT plannedChargeDay FROM obligations LIMIT 1;" >/dev/null 2>&1; then
+  echo "Applying DOMUS obligations/dossiers migration..."
+  sqlite3 "$DB_PATH" < /opt/domus/migrate_v7.sql
+fi
+
 exec "$@"

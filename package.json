@@ -14,6 +14,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "db:bootstrap": "sqlite3 prisma/dev.db \".read prisma/bootstrap.sql\"",
     "db:migrate:v2": "sqlite3 prisma/dev.db \".read prisma/migrate_v2.sql\"",
+    "db:migrate:v7": "sqlite3 prisma/dev.db \".read prisma/migrate_v7.sql\"",
     "setup": "npm install && npm run prisma:generate && npm run db:bootstrap && npm run prisma:seed"
   },
   "devDependencies": {

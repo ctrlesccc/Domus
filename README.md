@@ -19,6 +19,8 @@ DOMUS is a self-hosted household administration app for managing documents, cont
 5. Run `npm run prisma:seed`.
 6. Run `npm run dev`.
 
+If you already have an existing local database and update to a newer DOMUS version with schema changes, run the matching migration script as needed, for example `npm run db:migrate:v7`.
+
 Default login:
 
 - Username: `admin`
@@ -30,3 +32,4 @@ Uploaded files are stored in `storage/documents`.
 
 - The Prisma schema is included and Prisma Client is used by the app.
 - In this environment, Prisma schema-engine commands such as `migrate dev` and `db push` can fail for SQLite, so the initial database bootstrap is handled with `sqlite3` via `prisma/bootstrap.sql`.
+- Existing Docker deployments apply bundled SQLite migration scripts during container startup when required.

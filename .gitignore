@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+storage/documents
+*.log
+client/node_modules
+server/node_modules
+client/dist
+server/dist
+prisma/dev.db
+prisma/dev.db-journal

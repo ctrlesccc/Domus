@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ContactKind {
+  BUSINESS
+  PERSONAL
+}
+
+enum ContactTypeCategory {
+  BUSINESS
+  PERSONAL
+  BOTH
+}
+
+enum DossierTopic {
+  NONE
+  VERZEKERINGEN
+  WONEN
+  ZORG
+  ENERGIE
+  OVERIG
+}
+
+enum ImportStatus {
+  PENDING
+  IMPORTED
+  ERROR
+}
+
+enum OcrStatus {
+  PENDING
+  SUCCESS
+  ERROR
+  UNSUPPORTED
+}
+
+enum DocumentStatus {
+  ACTIVE
+  EXPIRED
+  ARCHIVED
+}
+
+enum ObligationFrequency {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  ONE_TIME
+}
+
+enum ObligationStatus {
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model AppSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}
+
+model ContactType {
+  id        Int                 @id @default(autoincrement())
+  name      String              @unique
+  category  ContactTypeCategory @default(BOTH)
+  sortOrder Int                 @default(0)
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  contacts  Contact[]
+
+  @@map("contact_types")
+}
+
+model Contact {
+  id                Int         @id @default(autoincrement())
+  name              String
+  address           String?
+  postalCode        String?
+  city              String?
+  phone             String?
+  email             String?
+  website           String?
+  contactTypeId     Int
+  kind              ContactKind
+  sendChristmasCard Boolean     @default(false)
+  sendFuneralCard   Boolean     @default(false)
+  sendBirthdayCard  Boolean     @default(false)
+  birthDate         DateTime?
+  notes             String?
+  dossierTopic      DossierTopic @default(NONE)
+  isActive          Boolean     @default(true)
+  deletedAt         DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  contactType ContactType @relation(fields: [contactTypeId], references: [id], onDelete: Restrict)
+  documents   Document[]
+  documentLinks DocumentContact[]
+  obligations Obligation[]
+
+  @@index([contactTypeId])
+  @@index([kind])
+  @@index([name])
+  @@index([city])
+  @@map("contacts")
+}
+
+model DocumentType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents Document[]
+
+  @@map("document_types")
+}
+
+model Document {
+  id               Int            @id @default(autoincrement())
+  title            String
+  originalFilename String
+  storedFilename   String
+  storagePath      String
+  mimeType         String
+  fileSize         Int
+  documentTypeId   Int
+  contactId        Int?
+  expiryDate       DateTime?
+  documentDate     DateTime?
+  status           DocumentStatus @default(ACTIVE)
+  notes            String?
+  dossierTopic     DossierTopic   @default(NONE)
+  archivedAt       DateTime?
+  deletedAt        DateTime?
+  versionGroup     String
+  versionNumber    Int            @default(1)
+  isLatestVersion  Boolean        @default(true)
+  previousVersionId Int?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  documentType        DocumentType         @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
+  contact             Contact?             @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  documentContacts    DocumentContact[]
+  obligationDocuments ObligationDocument[]
+  previousVersion     Document?            @relation("DocumentVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersions        Document[]           @relation("DocumentVersions")
+
+  @@index([documentTypeId])
+  @@index([contactId])
+  @@index([title])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([deletedAt])
+  @@index([versionGroup, versionNumber])
+  @@map("documents")
+}
+
+model ImportDocument {
+  id               Int          @id @default(autoincrement())
+  originalFilename String
+  sourcePath       String       @unique
+  mimeType         String
+  fileSize         Int
+  status           ImportStatus @default(PENDING)
+  ocrStatus        OcrStatus    @default(PENDING)
+  ocrText          String?
+  draftTitle       String?
+  draftDocumentTypeId Int?
+  draftContactId   Int?
+  draftDocumentDate DateTime?
+  draftExpiryDate  DateTime?
+  draftDossierTopic DossierTopic @default(NONE)
+  draftNotes       String?
+  errorMessage     String?
+  discoveredAt     DateTime     @default(now())
+  importedAt       DateTime?
+  updatedAt        DateTime     @updatedAt
+
+  @@index([status])
+  @@index([discoveredAt])
+  @@map("import_documents")
+}
+
+model DocumentContact {
+  id         Int      @id @default(autoincrement())
+  documentId Int
+  contactId  Int
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  contact  Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, contactId])
+  @@index([documentId])
+  @@index([contactId])
+  @@map("document_contacts")
+}
+
+model ObligationType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  obligations Obligation[]
+
+  @@map("obligation_types")
+}
+
+model Obligation {
+  id                       Int                 @id @default(autoincrement())
+  title                    String
+  obligationTypeId         Int
+  contactId                Int?
+  contractNumber           String?
+  amountInCents            Int
+  currency                 String              @default("EUR")
+  frequency                ObligationFrequency
+  startDate                DateTime?
+  endDate                  DateTime?
+  cancellationPeriodDays   Int?
+  paymentMethod            String?
+  autoRenew                Boolean             @default(false)
+  showOnDashboard          Boolean             @default(false)
+  reminderDate             DateTime?
+  reviewDate               DateTime?
+  status                   ObligationStatus    @default(ACTIVE)
+  notes                    String?
+  dossierTopic             DossierTopic        @default(NONE)
+  deletedAt                DateTime?
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
+  obligationType      ObligationType       @relation(fields: [obligationTypeId], references: [id], onDelete: Restrict)
+  contact             Contact?             @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  obligationDocuments ObligationDocument[]
+
+  @@index([obligationTypeId])
+  @@index([contactId])
+  @@index([title])
+  @@index([status])
+  @@index([endDate])
+  @@index([showOnDashboard])
+  @@index([deletedAt])
+  @@map("obligations")
+}
+
+model ObligationDocument {
+  id           Int      @id @default(autoincrement())
+  obligationId Int
+  documentId   Int
+  createdAt    DateTime @default(now())
+
+  obligation Obligation @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+  document   Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([obligationId, documentId])
+  @@index([obligationId])
+  @@index([documentId])
+  @@map("obligation_documents")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  entityType String
+  entityId   Int
+  action     String
+  oldValue   String?
+  newValue   String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_log")
+}

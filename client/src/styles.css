@@ -1,0 +1,123 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-sand-50: #f7f3ea;
+  --color-sand-100: #ede3d1;
+  --color-sand-200: #dbc6a4;
+  --color-sand-300: #c29a69;
+  --color-sand-400: #ab7445;
+  --color-sand-500: #92582d;
+  --color-ink-900: #1d1c17;
+  --color-pine-600: #43605a;
+  --color-pine-700: #2e4742;
+}
+
+:root {
+  --font-display: "Manrope", "Inter", "Segoe UI", sans-serif;
+  --app-table-cell-y: 0.95rem;
+  --app-table-header-y: 0.85rem;
+  --app-form-gap: 1rem;
+  --app-list-card-padding: 1rem;
+  color: var(--color-ink-900);
+  background:
+    radial-gradient(circle at top right, rgba(194, 154, 105, 0.22), transparent 28%),
+    linear-gradient(180deg, #f9f5ee 0%, #f2ebdf 52%, #ece2d3 100%);
+  font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
+  font-size: 15px;
+}
+
+:root[data-density="compact"] {
+  --app-table-cell-y: 0.7rem;
+  --app-table-header-y: 0.65rem;
+  --app-form-gap: 0.8rem;
+  --app-list-card-padding: 0.8rem;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.app-card {
+  @apply rounded-[1.5rem] bg-white/84 shadow-[0_10px_30px_rgba(29,28,23,0.05)] ring-1 ring-white/70 backdrop-blur-md;
+}
+
+.app-display-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.045em;
+}
+
+.app-section-kicker {
+  @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500;
+}
+
+.app-section-title {
+  @apply text-lg font-semibold tracking-tight text-ink-900;
+}
+
+.app-table th {
+  padding-top: var(--app-table-header-y);
+  padding-bottom: var(--app-table-header-y);
+}
+
+.app-table td {
+  padding-top: var(--app-table-cell-y);
+  padding-bottom: var(--app-table-cell-y);
+}
+
+.app-form {
+  gap: var(--app-form-gap);
+}
+
+.app-list-card {
+  padding: var(--app-list-card-padding);
+}
+
+.app-input {
+  @apply w-full rounded-2xl border border-stone-200 bg-white/92 px-4 py-2.5 text-[0.95rem] text-stone-800 outline-none transition focus:border-sand-300 focus:ring-4 focus:ring-sand-100/80;
+}
+
+.app-select {
+  @apply w-full rounded-2xl border border-stone-200 bg-white/92 px-4 py-2.5 text-[0.95rem] text-stone-800 outline-none transition focus:border-sand-300 focus:ring-4 focus:ring-sand-100/80;
+}
+
+.app-textarea {
+  @apply min-h-28 w-full resize-y rounded-2xl border border-stone-200 bg-white/92 px-4 py-3 text-[0.95rem] text-stone-800 outline-none transition focus:border-sand-300 focus:ring-4 focus:ring-sand-100/80;
+}
+
+.app-button {
+  @apply inline-flex items-center justify-center rounded-full bg-pine-700 px-4 py-2 text-sm font-medium tracking-tight text-white transition-all duration-200 ease-out hover:bg-pine-600 hover:shadow-[0_10px_24px_rgba(46,71,66,0.18)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.app-button-secondary {
+  @apply inline-flex items-center justify-center rounded-full border border-stone-200 bg-white/88 px-3.5 py-2 text-sm font-medium text-stone-700 transition-all duration-200 ease-out hover:border-sand-200 hover:bg-sand-50 active:scale-[0.98];
+}
+
+.app-button-ghost {
+  @apply inline-flex items-center justify-center rounded-full border border-transparent bg-transparent px-3 py-1.5 text-sm font-medium text-stone-600 transition-all duration-200 ease-out hover:border-stone-200 hover:bg-white hover:text-ink-900;
+}
+
+.app-badge {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+}
+
+.app-label {
+  @apply mb-2 block text-[13px] font-medium text-stone-500;
+}

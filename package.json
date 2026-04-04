@@ -1,0 +1,24 @@
+{
+  "name": "domus",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace client\"",
+    "build": "npm run build --workspace client && npm run build --workspace server",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "db:bootstrap": "sqlite3 prisma/dev.db \".read prisma/bootstrap.sql\"",
+    "db:migrate:v2": "sqlite3 prisma/dev.db \".read prisma/migrate_v2.sql\"",
+    "setup": "npm install && npm run prisma:generate && npm run db:bootstrap && npm run prisma:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prisma": "^6.7.0",
+    "tsx": "^4.20.6"
+  }
+}

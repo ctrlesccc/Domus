@@ -1,0 +1,8 @@
+PRAGMA foreign_keys = ON;
+
+ALTER TABLE contacts ADD COLUMN birthDate DATETIME;
+ALTER TABLE contacts ADD COLUMN dossierTopic TEXT NOT NULL DEFAULT 'NONE';
+
+ALTER TABLE documents ADD COLUMN dossierTopic TEXT NOT NULL DEFAULT 'NONE';
+
+ALTER TABLE obligations ADD COLUMN dossierTopic TEXT NOT NULL DEFAULT 'NONE';

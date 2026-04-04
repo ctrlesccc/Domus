@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import { PrismaClient, ContactKind, ContactTypeCategory, DossierTopic, ObligationFrequency, UserRole } from "@prisma/client";
+import { PrismaClient, ContactKind, ContactTypeCategory, ObligationFrequency, UserRole } from "@prisma/client";
 
 dotenv.config();
 
@@ -69,6 +69,16 @@ async function main() {
     update: { value: "30" },
     create: { key: "dashboard.expiryWindowDays", value: "30" },
   });
+  await prisma.appSetting.upsert({
+    where: { key: "options.dossiers" },
+    update: { value: JSON.stringify(["Verzekeringen", "Wonen", "Zorg", "Energie", "Overig"]) },
+    create: { key: "options.dossiers", value: JSON.stringify(["Verzekeringen", "Wonen", "Zorg", "Energie", "Overig"]) },
+  });
+  await prisma.appSetting.upsert({
+    where: { key: "options.paymentMethods" },
+    update: { value: JSON.stringify(["Incasso", "Contant", "Creditcard", "Paypal"]) },
+    create: { key: "options.paymentMethods", value: JSON.stringify(["Incasso", "Contant", "Creditcard", "Paypal"]) },
+  });
 
   const insurerType = await prisma.contactType.findUniqueOrThrow({ where: { name: "Verzekeraar" } });
   const familyType = await prisma.contactType.findUniqueOrThrow({ where: { name: "Familie" } });
@@ -82,7 +92,7 @@ async function main() {
       email: "service@voorbeeldverzekeraar.nl",
       contactTypeId: insurerType.id,
       kind: ContactKind.BUSINESS,
-      dossierTopic: DossierTopic.VERZEKERINGEN,
+      dossierTopic: "Verzekeringen",
     },
     create: {
       name: "Voorbeeld Verzekeraar",
@@ -90,7 +100,7 @@ async function main() {
       email: "service@voorbeeldverzekeraar.nl",
       contactTypeId: insurerType.id,
       kind: ContactKind.BUSINESS,
-      dossierTopic: DossierTopic.VERZEKERINGEN,
+      dossierTopic: "Verzekeringen",
     },
   });
 
@@ -102,7 +112,7 @@ async function main() {
       contactTypeId: familyType.id,
       kind: ContactKind.PERSONAL,
       birthDate: new Date("1988-09-14"),
-      dossierTopic: DossierTopic.OVERIG,
+      dossierTopic: "Overig",
       sendChristmasCard: true,
       sendBirthdayCard: true,
     },
@@ -112,7 +122,7 @@ async function main() {
       contactTypeId: familyType.id,
       kind: ContactKind.PERSONAL,
       birthDate: new Date("1988-09-14"),
-      dossierTopic: DossierTopic.OVERIG,
+      dossierTopic: "Overig",
       sendChristmasCard: true,
       sendBirthdayCard: true,
     },
@@ -126,7 +136,7 @@ async function main() {
       contactId: insurer.id,
       amountInCents: 1499,
       frequency: ObligationFrequency.MONTHLY,
-      dossierTopic: DossierTopic.VERZEKERINGEN,
+      dossierTopic: "Verzekeringen",
       showOnDashboard: true,
       status: "ACTIVE",
     },
@@ -136,7 +146,7 @@ async function main() {
       contactId: insurer.id,
       amountInCents: 1499,
       frequency: ObligationFrequency.MONTHLY,
-      dossierTopic: DossierTopic.VERZEKERINGEN,
+      dossierTopic: "Verzekeringen",
       showOnDashboard: true,
       status: "ACTIVE",
     },

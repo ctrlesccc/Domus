@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
-import type { Contact, DocumentItem, ImportItem, Obligation, ReferenceItem } from "../types";
+import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
+import type { AppSetting, Contact, DocumentItem, ImportItem, Obligation, ReferenceItem } from "../types";
 import { PageHeader } from "../ui/page-header";
 
 const emptyForm = {
@@ -14,7 +15,7 @@ const emptyForm = {
   documentDate: "",
   status: "ACTIVE",
   notes: "",
-  dossierTopic: "NONE",
+  dossierTopic: "",
   obligationIds: [] as string[],
 };
 
@@ -24,22 +25,25 @@ export function ImportsPage() {
   const [documentTypes, setDocumentTypes] = useState<ReferenceItem[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
+  const [settings, setSettings] = useState<AppSetting[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   async function load() {
-    const [imports, types, fetchedContacts, fetchedObligations] = await Promise.all([
+    const [imports, types, fetchedContacts, fetchedObligations, fetchedSettings] = await Promise.all([
       api.imports(),
       api.documentTypes(),
       api.contacts(""),
       api.obligations(""),
+      api.settings(),
     ]);
     setItems(imports);
-    setDocumentTypes(types);
-    setContacts(fetchedContacts);
-    setObligations(fetchedObligations);
+    setDocumentTypes(referenceOptions(types));
+    setContacts(sortByLabel(fetchedContacts, (item) => item.name));
+    setObligations(sortByLabel(fetchedObligations, (item) => item.title));
+    setSettings(fetchedSettings);
   }
 
   useEffect(() => {
@@ -72,7 +76,7 @@ export function ImportsPage() {
       contactId: selectedItem.draftContactId ? String(selectedItem.draftContactId) : "",
       documentDate: selectedItem.draftDocumentDate ? selectedItem.draftDocumentDate.slice(0, 10) : "",
       expiryDate: selectedItem.draftExpiryDate ? selectedItem.draftExpiryDate.slice(0, 10) : "",
-      dossierTopic: selectedItem.draftDossierTopic || "NONE",
+      dossierTopic: selectedItem.draftDossierTopic || "",
       notes: selectedItem.draftNotes || "",
     });
   }, [selectedItem]);
@@ -246,12 +250,12 @@ export function ImportsPage() {
                 <div>
                   <label className="app-label">Dossier</label>
                   <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value })}>
-                    <option value="NONE">Geen dossier</option>
-                    <option value="VERZEKERINGEN">Verzekeringen</option>
-                    <option value="WONEN">Wonen</option>
-                    <option value="ZORG">Zorg</option>
-                    <option value="ENERGIE">Energie</option>
-                    <option value="OVERIG">Overig</option>
+                    <option value="">Geen dossier</option>
+                    {dossierSelectOptions(settings).concat(dossierSelectOptions(settings).length ? [] : defaultDossierOptions).map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

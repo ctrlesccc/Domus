@@ -2,7 +2,26 @@
 
 All notable changes to DOMUS are documented in this file.
 
-## [1.1.0] - 2026-04-04
+## [1.2.0] - 2026-04-04
+
+### Added
+- Geplande afschrijvingsdatum zonder jaar voor verplichtingen via maand- en dagselectie.
+- Dashboardblok met komende afschrijvingen voor de komende 30 dagen.
+- Instellingenbeheer voor dropdownwaarden van `Betaalwijze`.
+- Instellingenbeheer voor dossiers, inclusief toevoegen, wijzigen en verwijderen.
+- Uitklapbare legenda bij `Kosten per maand per type` op het dashboard, met directe inzage in de onderliggende verplichtingen.
+
+### Changed
+- `Betaalwijze` in verplichtingen gewijzigd van vrij tekstveld naar dropdown.
+- Dropdownvelden alfabetisch gesorteerd gemaakt.
+- Verplichtingenlijst gewijzigd naar alfabetische standaardvolgorde.
+- Lijstkoppen klikbaar gemaakt voor handmatige sortering in de belangrijkste lijsten.
+- Dashboard aangepast: blok `Jaarlijkse kostenanalyse` verwijderd en `Kosten per maand per type` over de volle breedte geplaatst met legenda rechts.
+- Dossiers aangepast van vaste technische waarden naar beheerbare tekstopties.
+
+### Fixed
+- Nieuwe verplichting wordt na opslaan weer correct leeggemaakt.
+- Bedragveld bij nieuwe verplichtingen accepteert nu ook komma-invoer zoals `12,50`.
 
 ### Added
 - Jaarplanning met tijdlijn voor documentdatums, vervaldatums, reviewdata, contracteinden en verjaardagen.
@@ -41,4 +60,3 @@ All notable changes to DOMUS are documented in this file.
 - Prisma-schema uitgebreid met gebruikersrollen, actieve/inactieve accounts, laatste login en audit-actorvelden.
 - Nieuwe migratie toegevoegd voor gebruikers- en audituitbreidingen.
 - Container-setup ondersteunt opslag van database, documenten en back-ups buiten de container via host-volumes.
-

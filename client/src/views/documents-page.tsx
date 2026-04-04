@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
+import { referenceOptions, sortByLabel } from "../lib/options";
 import type { Contact, DocumentItem, ReferenceItem } from "../types";
 import { EmptyState } from "../ui/empty-state";
 import { PageHeader } from "../ui/page-header";
@@ -36,8 +37,8 @@ export function DocumentsPage() {
     ])
       .then(([documents, fetchedDocumentTypes, fetchedContacts]) => {
         setItems(documents);
-        setDocumentTypes(fetchedDocumentTypes);
-        setContacts(fetchedContacts);
+        setDocumentTypes(referenceOptions(fetchedDocumentTypes));
+        setContacts(sortByLabel(fetchedContacts, (item) => item.name));
       })
       .catch((loadError) => setError(loadError.message));
   }, [filters]);

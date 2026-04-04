@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
-import { DossierTopic, ImportStatus, OcrStatus } from "@prisma/client";
+import { ImportStatus, OcrStatus } from "@prisma/client";
 import { createWorker } from "tesseract.js";
 import { PDFParse } from "pdf-parse";
+import { defaultDossierOptions } from "./app-options.js";
 import { prisma } from "./prisma.js";
 
 function tokenize(value: string) {
@@ -64,11 +65,11 @@ function parseDutchDate(value: string) {
 
 function inferDossierTopic(text: string, filename: string) {
   const source = `${text}\n${filename}`.toLowerCase();
-  if (/(verzekering|polis|premie|reaal|asr|interpolis)/i.test(source)) return "VERZEKERINGEN";
-  if (/(woning|huur|hypotheek|gemeente|vastgoed)/i.test(source)) return "WONEN";
-  if (/(zorg|huisarts|ziekenhuis|apotheek|medisch|tandarts)/i.test(source)) return "ZORG";
-  if (/(energie|stroom|gas|water|internet|telecom)/i.test(source)) return "ENERGIE";
-  return "NONE";
+  if (/(verzekering|polis|premie|reaal|asr|interpolis)/i.test(source)) return "Verzekeringen";
+  if (/(woning|huur|hypotheek|gemeente|vastgoed)/i.test(source)) return "Wonen";
+  if (/(zorg|huisarts|ziekenhuis|apotheek|medisch|tandarts)/i.test(source)) return "Zorg";
+  if (/(energie|stroom|gas|water|internet|telecom)/i.test(source)) return "Energie";
+  return "";
 }
 
 function firstMeaningfulLine(text: string, fallback: string) {
@@ -175,11 +176,10 @@ export async function analyzeImportDocument(input: {
         draftContactId: contact?.id ?? null,
         draftDocumentDate: matchedDates[0] ?? null,
         draftExpiryDate: matchedDates.length > 1 ? matchedDates[matchedDates.length - 1] : null,
-        draftDossierTopic: (
-          inferDossierTopic(text, input.originalFilename) !== "NONE"
+        draftDossierTopic:
+          inferDossierTopic(text, input.originalFilename) !== ""
             ? inferDossierTopic(text, input.originalFilename)
-            : (bestHistoricalMatch?.item.dossierTopic ?? "NONE")
-        ) as DossierTopic,
+            : (bestHistoricalMatch?.item.dossierTopic ?? defaultDossierOptions[0] ?? ""),
         draftNotes: text ? text.slice(0, 1500) : null,
         errorMessage: null,
       },

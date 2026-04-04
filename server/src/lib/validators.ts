@@ -25,6 +25,36 @@ const optionalDate = z
   .transform((value) => (value ? new Date(value) : undefined))
   .optional();
 
+const optionalAmount = z
+  .union([z.number(), z.string()])
+  .optional()
+  .transform((value) => {
+    if (typeof value === "number") {
+      return value;
+    }
+    if (typeof value === "string") {
+      const normalized = value.trim().replace(",", ".");
+      if (!normalized) {
+        return undefined;
+      }
+      return Number(normalized);
+    }
+    return undefined;
+  });
+
+const optionalMonthDay = z
+  .union([z.number(), z.string()])
+  .optional()
+  .transform((value) => {
+    if (typeof value === "number") {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      return Number(value);
+    }
+    return undefined;
+  });
+
 export const loginSchema = z.object({
   username: z.string().trim().min(1),
   password: z.string().min(1),
@@ -93,49 +123,61 @@ export const contactSchema = z.object({
   sendBirthdayCard: optionalBoolean.default(false),
   birthDate: optionalDate,
   notes: optionalString,
-  dossierTopic: z.enum(["NONE", "VERZEKERINGEN", "WONEN", "ZORG", "ENERGIE", "OVERIG"]).default("NONE"),
+  dossierTopic: optionalString.default(""),
   isActive: optionalBoolean.default(true),
 });
 
-export const obligationSchema = z
-  .object({
-    title: z.string().trim().min(1),
-    obligationTypeId: z.coerce.number().int().positive(),
-    contactId: z.coerce.number().int().positive().optional(),
-    contractNumber: optionalString,
-    amount: z.coerce.number().min(0).default(0),
-    currency: z.string().trim().min(3).max(3).default("EUR"),
-    frequency: z.enum(["MONTHLY", "QUARTERLY", "YEARLY", "ONE_TIME"]),
-    startDate: optionalDate,
-    endDate: optionalDate,
-    cancellationPeriodDays: z.coerce.number().int().min(0).optional(),
-    paymentMethod: optionalString,
-    autoRenew: optionalBoolean.default(false),
-    showOnDashboard: optionalBoolean.default(false),
-    reminderDate: optionalDate,
-    reviewDate: optionalDate,
-    status: z.enum(["ACTIVE", "ENDED", "EXPIRED"]).default("ACTIVE"),
-    notes: optionalString,
-    dossierTopic: z.enum(["NONE", "VERZEKERINGEN", "WONEN", "ZORG", "ENERGIE", "OVERIG"]).default("NONE"),
-    documentIds: z
-      .union([z.array(z.coerce.number().int().positive()), z.string(), z.undefined()])
-      .transform((value) => {
-        if (Array.isArray(value)) {
-          return value;
-        }
-        if (typeof value === "string" && value.trim()) {
-          return value
-            .split(",")
-            .map((item) => Number(item.trim()))
-            .filter((item) => Number.isFinite(item) && item > 0);
-        }
-        return [];
-      }),
-  })
+const obligationBaseSchema = z.object({
+  title: z.string().trim().min(1),
+  obligationTypeId: z.coerce.number().int().positive(),
+  contactId: z.coerce.number().int().positive().optional(),
+  contractNumber: optionalString,
+  amount: optionalAmount.pipe(z.number().min(0)).default(0),
+  currency: z.string().trim().min(3).max(3).default("EUR"),
+  frequency: z.enum(["MONTHLY", "QUARTERLY", "YEARLY", "ONE_TIME"]),
+  startDate: optionalDate,
+  endDate: optionalDate,
+  cancellationPeriodDays: z.coerce.number().int().min(0).optional(),
+  paymentMethod: optionalString,
+  autoRenew: optionalBoolean.default(false),
+  showOnDashboard: optionalBoolean.default(false),
+  reminderDate: optionalDate,
+  reviewDate: optionalDate,
+  plannedChargeDay: optionalMonthDay.pipe(z.number().int().min(1).max(31).optional()),
+  plannedChargeMonth: optionalMonthDay.pipe(z.number().int().min(1).max(12).optional()),
+  status: z.enum(["ACTIVE", "ENDED", "EXPIRED"]).default("ACTIVE"),
+  notes: optionalString,
+  dossierTopic: optionalString.default(""),
+  documentIds: z
+    .union([z.array(z.coerce.number().int().positive()), z.string(), z.undefined()])
+    .transform((value) => {
+      if (Array.isArray(value)) {
+        return value;
+      }
+      if (typeof value === "string" && value.trim()) {
+        return value
+          .split(",")
+          .map((item) => Number(item.trim()))
+          .filter((item) => Number.isFinite(item) && item > 0);
+      }
+      return [];
+    }),
+});
+
+export const obligationSchema = obligationBaseSchema
   .refine((input) => !input.startDate || !input.endDate || input.endDate >= input.startDate, {
     message: "End date cannot be before start date.",
     path: ["endDate"],
-  });
+  })
+  .refine(
+    (input) =>
+      (!input.plannedChargeDay && !input.plannedChargeMonth) ||
+      (Boolean(input.plannedChargeDay) && Boolean(input.plannedChargeMonth)),
+    {
+      message: "Planned charge date requires both day and month.",
+      path: ["plannedChargeDay"],
+    },
+  );
 
 export const documentSchema = z.object({
   title: z.string().trim().min(1),
@@ -161,7 +203,7 @@ export const documentSchema = z.object({
   documentDate: optionalDate,
   status: z.enum(["ACTIVE", "EXPIRED", "ARCHIVED"]).default("ACTIVE"),
   notes: optionalString,
-  dossierTopic: z.enum(["NONE", "VERZEKERINGEN", "WONEN", "ZORG", "ENERGIE", "OVERIG"]).default("NONE"),
+  dossierTopic: optionalString.default(""),
   createNewVersion: optionalBoolean.default(false),
   obligationIds: z
     .union([z.array(z.coerce.number().int().positive()), z.string(), z.undefined()])

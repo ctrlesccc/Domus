@@ -43,7 +43,7 @@ export type Contact = {
   sendBirthdayCard: boolean;
   birthDate?: string | null;
   notes?: string | null;
-  dossierTopic: "NONE" | "VERZEKERINGEN" | "WONEN" | "ZORG" | "ENERGIE" | "OVERIG";
+  dossierTopic: string;
   isActive: boolean;
   contactType: {
     id: number;
@@ -64,7 +64,7 @@ export type DocumentItem = {
   documentDate?: string | null;
   status: "ACTIVE" | "EXPIRED" | "ARCHIVED";
   notes?: string | null;
-  dossierTopic: "NONE" | "VERZEKERINGEN" | "WONEN" | "ZORG" | "ENERGIE" | "OVERIG";
+  dossierTopic: string;
   createdAt: string;
   updatedAt: string;
   documentType: ReferenceItem;
@@ -106,9 +106,11 @@ export type Obligation = {
   showOnDashboard: boolean;
   reminderDate?: string | null;
   reviewDate?: string | null;
+  plannedChargeDay?: number | null;
+  plannedChargeMonth?: number | null;
   status: "ACTIVE" | "ENDED" | "EXPIRED";
   notes?: string | null;
-  dossierTopic: "NONE" | "VERZEKERINGEN" | "WONEN" | "ZORG" | "ENERGIE" | "OVERIG";
+  dossierTopic: string;
   contact?: Contact | null;
   obligationType: ReferenceItem;
   documentIds: number[];
@@ -125,6 +127,8 @@ export type DashboardData = {
   };
   documentsExpiringSoon: DocumentItem[];
   obligationsEndingSoon: Obligation[];
+  upcomingPlannedCharges: (Obligation & { plannedDate: string })[];
+  dossierOptions: string[];
   activePolicies: {
     id: number;
     title: string;
@@ -161,6 +165,7 @@ export type DashboardData = {
     count: number;
     monthly: number;
     yearly: number;
+    obligations: Obligation[];
   }[];
   missingData: {
     documentsWithoutDate: {
@@ -267,7 +272,7 @@ export type ImportItem = {
   draftContactId?: number | null;
   draftDocumentDate?: string | null;
   draftExpiryDate?: string | null;
-  draftDossierTopic?: "NONE" | "VERZEKERINGEN" | "WONEN" | "ZORG" | "ENERGIE" | "OVERIG";
+  draftDossierTopic?: string;
   draftNotes?: string | null;
   errorMessage?: string | null;
   discoveredAt: string;

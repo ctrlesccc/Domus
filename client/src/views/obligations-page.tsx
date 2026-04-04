@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatCurrency, formatDate } from "../lib/format";
-import type { Contact, DocumentItem, Obligation, ReferenceItem } from "../types";
+import { defaultDossierOptions, defaultPaymentMethodOptions, dossierSelectOptions, paymentMethodOptions, referenceOptions, sortByLabel } from "../lib/options";
+import type { AppSetting, Contact, DocumentItem, Obligation, ReferenceItem } from "../types";
 import { PageHeader } from "../ui/page-header";
 import { EmptyState } from "../ui/empty-state";
 
-const blankForm = {
+function createBlankForm() {
+  return {
   title: "",
   obligationTypeId: "",
   contactId: "",
@@ -22,11 +24,16 @@ const blankForm = {
   showOnDashboard: false,
   reminderDate: "",
   reviewDate: "",
+  plannedChargeDay: "",
+  plannedChargeMonth: "",
   status: "ACTIVE",
   notes: "",
-  dossierTopic: "NONE",
+  dossierTopic: "",
   documentIds: [] as string[],
-};
+  };
+}
+
+type SortKey = "title" | "type" | "amount" | "endDate" | "status";
 
 export function ObligationsPage() {
   const navigate = useNavigate();
@@ -36,23 +43,28 @@ export function ObligationsPage() {
   const [types, setTypes] = useState<ReferenceItem[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [settings, setSettings] = useState<AppSetting[]>([]);
   const [query, setQuery] = useState("");
-  const [form, setForm] = useState(blankForm);
+  const [form, setForm] = useState(createBlankForm);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("title");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   async function load() {
-    const [obligations, obligationTypes, fetchedContacts, fetchedDocuments] = await Promise.all([
+    const [obligations, obligationTypes, fetchedContacts, fetchedDocuments, fetchedSettings] = await Promise.all([
       api.obligations(`?q=${encodeURIComponent(query)}`),
       api.obligationTypes(),
       api.contacts("?kind=BUSINESS"),
       api.documents(""),
+      api.settings(),
     ]);
 
     setItems(obligations);
-    setTypes(obligationTypes);
-    setContacts(fetchedContacts);
-    setDocuments(fetchedDocuments);
+    setTypes(referenceOptions(obligationTypes));
+    setContacts(sortByLabel(fetchedContacts, (item) => item.name));
+    setDocuments(sortByLabel(fetchedDocuments, (item) => item.title));
+    setSettings(fetchedSettings);
   }
 
   useEffect(() => {
@@ -61,7 +73,7 @@ export function ObligationsPage() {
 
   useEffect(() => {
     if (!selectedId) {
-      setForm(blankForm);
+      setForm(createBlankForm());
       return;
     }
 
@@ -84,6 +96,8 @@ export function ObligationsPage() {
           showOnDashboard: item.showOnDashboard,
           reminderDate: item.reminderDate ? item.reminderDate.slice(0, 10) : "",
           reviewDate: item.reviewDate ? item.reviewDate.slice(0, 10) : "",
+          plannedChargeDay: item.plannedChargeDay ? String(item.plannedChargeDay) : "",
+          plannedChargeMonth: item.plannedChargeMonth ? String(item.plannedChargeMonth) : "",
           status: item.status,
           notes: item.notes ?? "",
           dossierTopic: item.dossierTopic,
@@ -94,6 +108,50 @@ export function ObligationsPage() {
   }, [selectedId]);
 
   const selectedItem = useMemo(() => items.find((item) => String(item.id) === selectedId), [items, selectedId]);
+  const dossiers = dossierSelectOptions(settings);
+  const paymentMethods = paymentMethodOptions(settings);
+  const sortedItems = useMemo(() => {
+    const sorted = [...items].sort((left, right) => {
+      const direction = sortDirection === "asc" ? 1 : -1;
+      const leftValue =
+        sortKey === "title"
+          ? left.title
+          : sortKey === "type"
+            ? left.obligationType.name
+            : sortKey === "amount"
+              ? left.amount
+              : sortKey === "endDate"
+                ? left.endDate ?? ""
+                : left.status;
+      const rightValue =
+        sortKey === "title"
+          ? right.title
+          : sortKey === "type"
+            ? right.obligationType.name
+            : sortKey === "amount"
+              ? right.amount
+              : sortKey === "endDate"
+                ? right.endDate ?? ""
+                : right.status;
+
+      if (typeof leftValue === "number" && typeof rightValue === "number") {
+        return (leftValue - rightValue) * direction;
+      }
+
+      return String(leftValue).localeCompare(String(rightValue), "nl") * direction;
+    });
+    return sorted;
+  }, [items, sortDirection, sortKey]);
+
+  function toggleSort(nextKey: SortKey) {
+    if (sortKey === nextKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(nextKey);
+    setSortDirection("asc");
+  }
 
   return (
     <>
@@ -121,15 +179,15 @@ export function ObligationsPage() {
               <table className="app-table min-w-full text-left text-sm">
                 <thead className="text-stone-500">
                   <tr>
-                    <th className="pr-4">Titel</th>
-                    <th className="pr-4">Type</th>
-                    <th className="pr-4">Bedrag</th>
-                    <th className="pr-4">Einddatum</th>
-                    <th>Status</th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("title")} type="button">Titel</button></th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("type")} type="button">Type</button></th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("amount")} type="button">Bedrag</button></th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("endDate")} type="button">Einddatum</button></th>
+                    <th><button className="font-medium" onClick={() => toggleSort("status")} type="button">Status</button></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {sortedItems.map((item) => (
                     <tr className="border-t border-stone-200/70 transition hover:bg-white/55" key={item.id}>
                       <td className="pr-4">
                         <button className="block text-left font-medium text-pine-700 hover:text-pine-600" onClick={() => navigate(`/obligations/${item.id}`)} type="button">
@@ -185,8 +243,10 @@ export function ObligationsPage() {
                   ...form,
                   obligationTypeId: Number(form.obligationTypeId),
                   contactId: form.contactId ? Number(form.contactId) : undefined,
-                  amount: Number(form.amount),
+                  amount: Number(form.amount.replace(",", ".")),
                   cancellationPeriodDays: form.cancellationPeriodDays ? Number(form.cancellationPeriodDays) : undefined,
+                  plannedChargeDay: form.plannedChargeDay ? Number(form.plannedChargeDay) : undefined,
+                  plannedChargeMonth: form.plannedChargeMonth ? Number(form.plannedChargeMonth) : undefined,
                   documentIds: form.documentIds.map(Number),
                 };
 
@@ -194,6 +254,7 @@ export function ObligationsPage() {
                   await api.updateObligation(selectedId, payload);
                 } else {
                   await api.createObligation(payload);
+                  setForm(createBlankForm());
                 }
 
                 await load();
@@ -238,7 +299,7 @@ export function ObligationsPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label className="app-label">Bedrag</label>
-                <input className="app-input" min="0" required step="0.01" type="number" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
+                <input className="app-input" inputMode="decimal" placeholder="0,00" required value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
               </div>
               <div>
                 <label className="app-label">Valuta</label>
@@ -273,23 +334,52 @@ export function ObligationsPage() {
               </div>
               <div>
                 <label className="app-label">Betaalwijze</label>
-                <input className="app-input" value={form.paymentMethod} onChange={(event) => setForm({ ...form, paymentMethod: event.target.value })} />
+                <select className="app-select" value={form.paymentMethod} onChange={(event) => setForm({ ...form, paymentMethod: event.target.value })}>
+                  <option value="">Niet ingesteld</option>
+                  {paymentMethods.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
               <label className="app-label">Dossier</label>
               <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value })}>
-                <option value="NONE">Geen dossier</option>
-                <option value="VERZEKERINGEN">Verzekeringen</option>
-                <option value="WONEN">Wonen</option>
-                <option value="ZORG">Zorg</option>
-                <option value="ENERGIE">Energie</option>
-                <option value="OVERIG">Overig</option>
+                <option value="">Geen dossier</option>
+                {(dossiers.length ? dossiers : defaultDossierOptions).map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
               </select>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label className="app-label">Afschrijving maand</label>
+                <select className="app-select" value={form.plannedChargeMonth} onChange={(event) => setForm({ ...form, plannedChargeMonth: event.target.value })}>
+                  <option value="">Geen planning</option>
+                  {Array.from({ length: 12 }, (_, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {new Date(2000, index, 1).toLocaleString("nl-NL", { month: "long" })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="app-label">Afschrijving dag</label>
+                <select className="app-select" value={form.plannedChargeDay} onChange={(event) => setForm({ ...form, plannedChargeDay: event.target.value })}>
+                  <option value="">Geen planning</option>
+                  {Array.from({ length: 31 }, (_, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {index + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="app-label">Opzegtermijn (dagen)</label>
                 <input className="app-input" min="0" type="number" value={form.cancellationPeriodDays} onChange={(event) => setForm({ ...form, cancellationPeriodDays: event.target.value })} />
@@ -358,8 +448,8 @@ export function ObligationsPage() {
 
             <div className="flex flex-wrap gap-3">
               <button className="app-button" disabled={isSaving} type="submit">
-                {isSaving ? "Bezig..." : selectedId ? "Wijzigingen opslaan" : "Verplichting opslaan"}
-              </button>
+                  {isSaving ? "Bezig..." : selectedId ? "Wijzigingen opslaan" : "Verplichting opslaan"}
+                </button>
               {selectedId ? (
                 <button
                   className="app-button-secondary"

@@ -24,15 +24,6 @@ enum ContactTypeCategory {
   BOTH
 }
 
-enum DossierTopic {
-  NONE
-  VERZEKERINGEN
-  WONEN
-  ZORG
-  ENERGIE
-  OVERIG
-}
-
 enum ImportStatus {
   PENDING
   IMPORTED
@@ -119,7 +110,7 @@ model Contact {
   sendBirthdayCard  Boolean     @default(false)
   birthDate         DateTime?
   notes             String?
-  dossierTopic      DossierTopic @default(NONE)
+  dossierTopic      String       @default("")
   isActive          Boolean     @default(true)
   deletedAt         DateTime?
   createdAt         DateTime    @default(now())
@@ -164,7 +155,7 @@ model Document {
   documentDate     DateTime?
   status           DocumentStatus @default(ACTIVE)
   notes            String?
-  dossierTopic     DossierTopic   @default(NONE)
+  dossierTopic     String         @default("")
   archivedAt       DateTime?
   deletedAt        DateTime?
   versionGroup     String
@@ -205,7 +196,7 @@ model ImportDocument {
   draftContactId   Int?
   draftDocumentDate DateTime?
   draftExpiryDate  DateTime?
-  draftDossierTopic DossierTopic @default(NONE)
+  draftDossierTopic String       @default("")
   draftNotes       String?
   errorMessage     String?
   discoveredAt     DateTime     @default(now())
@@ -262,9 +253,11 @@ model Obligation {
   showOnDashboard          Boolean             @default(false)
   reminderDate             DateTime?
   reviewDate               DateTime?
+  plannedChargeDay         Int?
+  plannedChargeMonth       Int?
   status                   ObligationStatus    @default(ACTIVE)
   notes                    String?
-  dossierTopic             DossierTopic        @default(NONE)
+  dossierTopic             String              @default("")
   deletedAt                DateTime?
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt

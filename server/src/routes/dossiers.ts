@@ -1,16 +1,16 @@
 import { Router } from "express";
+import { defaultDossierOptions, getOptionList, sortAlphabetically } from "../lib/app-options.js";
 import { prisma } from "../lib/prisma.js";
 import { serializeContact, serializeDocument, serializeObligation } from "../lib/serializers.js";
 import { requireAuth } from "../middleware/auth.js";
 
-const dossierDefinitions = [
-  { key: "VERZEKERINGEN", title: "Verzekeringen", keywords: ["verzekering", "polis", "reaal", "asr", "interpolis", "aansprakelijkheid"] },
-  { key: "WONEN", title: "Wonen", keywords: ["woning", "huis", "huur", "hypotheek", "gemeente", "vastgoed"] },
-  { key: "ZORG", title: "Zorg", keywords: ["zorg", "huisarts", "ziekenhuis", "apotheek", "medisch", "tandarts"] },
-  { key: "ENERGIE", title: "Energie", keywords: ["energie", "stroom", "gas", "water", "internet", "telecom"] },
-  { key: "OVERIG", title: "Overig", keywords: [] },
-  { key: "NONE", title: "Nog In Te Delen", keywords: [] },
-] as const;
+const dossierKeywordMap: Record<string, string[]> = {
+  Verzekeringen: ["verzekering", "polis", "reaal", "asr", "interpolis", "aansprakelijkheid"],
+  Wonen: ["woning", "huis", "huur", "hypotheek", "gemeente", "vastgoed"],
+  Zorg: ["zorg", "huisarts", "ziekenhuis", "apotheek", "medisch", "tandarts"],
+  Energie: ["energie", "stroom", "gas", "water", "internet", "telecom"],
+  Overig: [],
+};
 
 function matchesKeywords(values: Array<string | null | undefined>, keywords: readonly string[]) {
   const haystack = values
@@ -25,6 +25,11 @@ export const dossiersRouter = Router();
 dossiersRouter.use(requireAuth);
 
 dossiersRouter.get("/", async (_request, response) => {
+  const configuredDossiers = await getOptionList("options.dossiers", defaultDossierOptions);
+  const dossierDefinitions = [
+    ...configuredDossiers.map((title) => ({ key: title, title, keywords: dossierKeywordMap[title] ?? [] })),
+    { key: "", title: "Nog In Te Delen", keywords: [] as string[] },
+  ];
   const [documents, obligations, contacts] = await Promise.all([
     prisma.document.findMany({
       where: { deletedAt: null, isLatestVersion: true },
@@ -55,38 +60,35 @@ dossiersRouter.get("/", async (_request, response) => {
   const dossiers = dossierDefinitions.map((definition) => {
     const dossierDocuments = documents.filter((item) =>
       item.dossierTopic === definition.key ||
-      (item.dossierTopic === "NONE" &&
+      (item.dossierTopic === "" &&
         definition.keywords.length > 0 &&
         matchesKeywords([item.title, item.notes, item.documentType.name, item.contact?.name], definition.keywords)) ||
-      (definition.key === "OVERIG" && item.dossierTopic === "OVERIG") ||
-      (definition.key === "NONE" &&
-        item.dossierTopic === "NONE" &&
+      (definition.key === "" &&
+        item.dossierTopic === "" &&
         !dossierDefinitions
-          .filter((entry) => entry.key !== "NONE" && entry.key !== "OVERIG")
+          .filter((entry) => entry.key !== "")
           .some((entry) => matchesKeywords([item.title, item.notes, item.documentType.name, item.contact?.name], entry.keywords))),
     );
     const dossierObligations = obligations.filter((item) =>
       item.dossierTopic === definition.key ||
-      (item.dossierTopic === "NONE" &&
+      (item.dossierTopic === "" &&
         definition.keywords.length > 0 &&
         matchesKeywords([item.title, item.notes, item.contractNumber, item.obligationType.name, item.contact?.name], definition.keywords)) ||
-      (definition.key === "OVERIG" && item.dossierTopic === "OVERIG") ||
-      (definition.key === "NONE" &&
-        item.dossierTopic === "NONE" &&
+      (definition.key === "" &&
+        item.dossierTopic === "" &&
         !dossierDefinitions
-          .filter((entry) => entry.key !== "NONE" && entry.key !== "OVERIG")
+          .filter((entry) => entry.key !== "")
           .some((entry) => matchesKeywords([item.title, item.notes, item.contractNumber, item.obligationType.name, item.contact?.name], entry.keywords))),
     );
     const dossierContacts = contacts.filter((item) =>
       item.dossierTopic === definition.key ||
-      (item.dossierTopic === "NONE" &&
+      (item.dossierTopic === "" &&
         definition.keywords.length > 0 &&
         matchesKeywords([item.name, item.notes, item.city, item.contactType.name], definition.keywords)) ||
-      (definition.key === "OVERIG" && item.dossierTopic === "OVERIG") ||
-      (definition.key === "NONE" &&
-        item.dossierTopic === "NONE" &&
+      (definition.key === "" &&
+        item.dossierTopic === "" &&
         !dossierDefinitions
-          .filter((entry) => entry.key !== "NONE" && entry.key !== "OVERIG")
+          .filter((entry) => entry.key !== "")
           .some((entry) => matchesKeywords([item.name, item.notes, item.city, item.contactType.name], entry.keywords))),
     );
 
@@ -94,9 +96,9 @@ dossiersRouter.get("/", async (_request, response) => {
       key: definition.key,
       title: definition.title,
       summary: `${dossierDocuments.length} documenten · ${dossierObligations.length} verplichtingen · ${dossierContacts.length} contacten`,
-      documents: dossierDocuments.slice(0, 8).map(serializeDocument),
-      obligations: dossierObligations.slice(0, 8).map(serializeObligation),
-      contacts: dossierContacts.slice(0, 8).map(serializeContact),
+      documents: sortAlphabetically(dossierDocuments.slice(0, 8), (item) => item.title).map(serializeDocument),
+      obligations: sortAlphabetically(dossierObligations.slice(0, 8), (item) => item.title).map(serializeObligation),
+      contacts: sortAlphabetically(dossierContacts.slice(0, 8), (item) => item.name).map(serializeContact),
     };
   });
 

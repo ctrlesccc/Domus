@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { ImportStatus } from "@prisma/client";
+import { getOptionList, sortAlphabetically } from "../lib/app-options.js";
 import { prisma } from "../lib/prisma.js";
 import { serializeDocument, serializeObligation } from "../lib/serializers.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -12,6 +13,8 @@ dashboardRouter.get("/", async (_request, response) => {
   const today = new Date();
   const next30Days = new Date();
   next30Days.setDate(today.getDate() + 30);
+  const year = today.getFullYear();
+  const dossierOptions = await getOptionList("options.dossiers", []);
 
   const [
     documentsExpiringSoon,
@@ -114,6 +117,24 @@ dashboardRouter.get("/", async (_request, response) => {
     }),
   ]);
 
+  const upcomingPlannedCharges = activeObligations
+    .filter((item) => item.plannedChargeDay && item.plannedChargeMonth)
+    .map((item) => {
+      const thisYear = new Date(year, (item.plannedChargeMonth ?? 1) - 1, item.plannedChargeDay ?? 1);
+      const nextDate = thisYear < today ? new Date(year + 1, (item.plannedChargeMonth ?? 1) - 1, item.plannedChargeDay ?? 1) : thisYear;
+      return {
+        obligation: item,
+        plannedDate: nextDate,
+      };
+    })
+    .filter((item) => item.plannedDate >= today && item.plannedDate <= next30Days)
+    .sort((left, right) => left.plannedDate.getTime() - right.plannedDate.getTime())
+    .slice(0, 8)
+    .map((item) => ({
+      ...serializeObligation(item.obligation),
+      plannedDate: item.plannedDate,
+    }));
+
   const activePolicies = activePolicyDocuments.map((document) => ({
     id: document.id,
     title: document.title,
@@ -160,14 +181,15 @@ dashboardRouter.get("/", async (_request, response) => {
     { monthly: 0, yearly: 0 },
   );
 
-  const annualCostByTypeMap = new Map<string, { typeName: string; count: number; monthly: number; yearly: number }>();
+  const annualCostByTypeMap = new Map<string, { typeName: string; count: number; monthly: number; yearly: number; obligations: ReturnType<typeof serializeObligation>[] }>();
   for (const obligation of activeObligations) {
     const key = obligation.obligationType.name;
     const annualized = (obligation.amountInCents / 100) * (yearlyMultiplier[obligation.frequency] ?? 1);
-    const current = annualCostByTypeMap.get(key) ?? { typeName: key, count: 0, monthly: 0, yearly: 0 };
+    const current = annualCostByTypeMap.get(key) ?? { typeName: key, count: 0, monthly: 0, yearly: 0, obligations: [] };
     current.count += 1;
     current.yearly += annualized;
     current.monthly += annualized / 12;
+    current.obligations.push(serializeObligation(obligation));
     annualCostByTypeMap.set(key, current);
   }
 
@@ -198,10 +220,12 @@ dashboardRouter.get("/", async (_request, response) => {
     },
     documentsExpiringSoon: documentsExpiringSoon.map(serializeDocument),
     obligationsEndingSoon: obligationsEndingSoon.map(serializeObligation),
+    upcomingPlannedCharges,
     activePolicies,
     policyGroups: [...groupedPoliciesMap.values()],
     costSummary,
-    annualCostByType: [...annualCostByTypeMap.values()].sort((left, right) => right.yearly - left.yearly),
+    annualCostByType: sortAlphabetically([...annualCostByTypeMap.values()], (item) => item.typeName),
+    dossierOptions,
     missingData,
     importQueue: recentImportItems,
   });

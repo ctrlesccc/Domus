@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../lib/api";
-import type { Contact, DocumentItem, Obligation, ReferenceItem } from "../types";
+import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
+import type { AppSetting, Contact, DocumentItem, Obligation, ReferenceItem } from "../types";
 import { PageHeader } from "../ui/page-header";
 
 type FormState = {
@@ -13,7 +14,7 @@ type FormState = {
   documentDate: string;
   status: "ACTIVE" | "EXPIRED" | "ARCHIVED";
   notes: string;
-  dossierTopic: "NONE" | "VERZEKERINGEN" | "WONEN" | "ZORG" | "ENERGIE" | "OVERIG";
+  dossierTopic: string;
   obligationIds: string[];
   createNewVersion: boolean;
 };
@@ -27,7 +28,7 @@ const emptyState: FormState = {
   documentDate: "",
   status: "ACTIVE",
   notes: "",
-  dossierTopic: "NONE",
+  dossierTopic: "",
   obligationIds: [],
   createNewVersion: true,
 };
@@ -39,6 +40,7 @@ export function DocumentEditorPage() {
   const [documentTypes, setDocumentTypes] = useState<ReferenceItem[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
+  const [settings, setSettings] = useState<AppSetting[]>([]);
   const [existingDocument, setExistingDocument] = useState<DocumentItem | null>(null);
   const [form, setForm] = useState<FormState>(emptyState);
   const [file, setFile] = useState<File | null>(null);
@@ -48,11 +50,12 @@ export function DocumentEditorPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    Promise.all([api.documentTypes(), api.contacts(""), api.obligations("")])
-      .then(([types, fetchedContacts, fetchedObligations]) => {
-        setDocumentTypes(types);
-        setContacts(fetchedContacts);
-        setObligations(fetchedObligations);
+    Promise.all([api.documentTypes(), api.contacts(""), api.obligations(""), api.settings()])
+      .then(([types, fetchedContacts, fetchedObligations, fetchedSettings]) => {
+        setDocumentTypes(referenceOptions(types));
+        setContacts(sortByLabel(fetchedContacts, (item) => item.name));
+        setObligations(sortByLabel(fetchedObligations, (item) => item.title));
+        setSettings(fetchedSettings);
       })
       .catch((loadError) => setError(loadError.message));
   }, []);
@@ -199,12 +202,12 @@ export function DocumentEditorPage() {
         <div>
           <label className="mb-2 block text-sm font-medium text-stone-700">Dossier</label>
           <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value as FormState["dossierTopic"] })}>
-            <option value="NONE">Geen dossier</option>
-            <option value="VERZEKERINGEN">Verzekeringen</option>
-            <option value="WONEN">Wonen</option>
-            <option value="ZORG">Zorg</option>
-            <option value="ENERGIE">Energie</option>
-            <option value="OVERIG">Overig</option>
+            <option value="">Geen dossier</option>
+            {dossierSelectOptions(settings).concat(dossierSelectOptions(settings).length ? [] : defaultDossierOptions).map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
         </div>
 

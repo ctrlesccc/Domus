@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
+import { defaultDossierOptions, defaultPaymentMethodOptions, parseStringListSetting } from "../lib/options";
 import type { AppSetting, BackupOverview, ManagedUser, ReferenceItem, TrashOverview } from "../types";
 import { useAuth } from "../state/auth";
 import { PageHeader } from "../ui/page-header";
@@ -200,7 +201,25 @@ export function SettingsPage() {
                   ))}
                 </div>
               </div>
-              {settings.map((item) => (
+              <StringListSettingEditor
+                fallback={defaultPaymentMethodOptions}
+                label="Betaalwijzen"
+                onSave={async (item, values) => {
+                  await api.updateSetting(item.id, { key: item.key, value: JSON.stringify(values) });
+                  await load();
+                }}
+                setting={settings.find((item) => item.key === "options.paymentMethods") ?? null}
+              />
+              <StringListSettingEditor
+                fallback={defaultDossierOptions}
+                label="Dossiers"
+                onSave={async (item, values) => {
+                  await api.updateSetting(item.id, { key: item.key, value: JSON.stringify(values) });
+                  await load();
+                }}
+                setting={settings.find((item) => item.key === "options.dossiers") ?? null}
+              />
+              {settings.filter((item) => !["options.paymentMethods", "options.dossiers"].includes(item.key)).map((item) => (
                 <SettingRow
                   key={item.id}
                   onSave={async (value) => {
@@ -232,6 +251,76 @@ export function SettingsPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function StringListSettingEditor({
+  setting,
+  label,
+  fallback,
+  onSave,
+}: {
+  setting: AppSetting | null;
+  label: string;
+  fallback: string[];
+  onSave: (setting: AppSetting, values: string[]) => Promise<void>;
+}) {
+  const [newValue, setNewValue] = useState("");
+  const [draftValues, setDraftValues] = useState<string[]>(setting ? parseStringListSetting([setting], setting.key, fallback) : fallback);
+
+  useEffect(() => {
+    setDraftValues(setting ? parseStringListSetting([setting], setting.key, fallback) : fallback);
+  }, [fallback, setting]);
+
+  if (!setting) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3 rounded-[1.35rem] bg-white/65 p-4">
+      <div>
+        <div className="text-sm font-semibold text-stone-700">{label}</div>
+        <div className="mt-1 text-sm text-stone-500">Deze waarden verschijnen in dropdownvelden door de hele applicatie.</div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {draftValues.map((item) => (
+          <div className="flex items-center gap-2 rounded-full bg-sand-50 px-3 py-2 text-sm text-stone-700" key={item}>
+            <input
+              className="min-w-24 bg-transparent outline-none"
+              value={item}
+              onChange={(event) => setDraftValues((current) => current.map((value) => (value === item ? event.target.value : value)))}
+            />
+            <button className="text-red-600" onClick={() => setDraftValues((current) => current.filter((value) => value !== item))} type="button">
+              x
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <input className="app-input max-w-sm" placeholder={`Nieuwe waarde voor ${label.toLowerCase()}`} value={newValue} onChange={(event) => setNewValue(event.target.value)} />
+        <button
+          className="app-button-secondary"
+          onClick={() => {
+            const trimmed = newValue.trim();
+            if (!trimmed) {
+              return;
+            }
+            setDraftValues((current) => [...new Set([...current, trimmed])].sort((left, right) => left.localeCompare(right, "nl")));
+            setNewValue("");
+          }}
+          type="button"
+        >
+          Toevoegen
+        </button>
+        <button
+          className="app-button"
+          onClick={() => onSave(setting, draftValues.map((item) => item.trim()).filter(Boolean))}
+          type="button"
+        >
+          Opslaan
+        </button>
+      </div>
+    </div>
   );
 }
 

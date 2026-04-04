@@ -19,6 +19,7 @@ const dashboardStatCards = [
 export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
+  const [expandedTypes, setExpandedTypes] = useState<string[]>([]);
 
   useEffect(() => {
     api.dashboard().then(setData).catch((dashboardError) => setError(dashboardError.message));
@@ -129,21 +130,23 @@ export function DashboardPage() {
         <div className="app-card flex min-h-52 flex-col px-6 py-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="app-section-kicker">Import</div>
-              <h3 className="app-section-title mt-2">Nieuwe importitems</h3>
+              <div className="app-section-kicker">Planning</div>
+              <h3 className="app-section-title mt-2">Komende afschrijvingen (30 dagen)</h3>
             </div>
-            <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">IMP</div>
+            <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">PLN</div>
           </div>
           <div className="mt-4 flex-1 space-y-3">
-            {data.importQueue.length ? (
-              data.importQueue.map((item) => (
+            {data.upcomingPlannedCharges.length ? (
+              data.upcomingPlannedCharges.map((item) => (
                 <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
-                  <div className="font-medium text-ink-900">{item.originalFilename}</div>
-                  <div className="mt-1 text-sm text-stone-500">{formatFileSize(item.fileSize)} · {formatDate(item.discoveredAt)}</div>
+                  <div className="font-medium text-ink-900">{item.title}</div>
+                  <div className="mt-1 text-sm text-stone-500">
+                    {item.obligationType.name} · {formatDate(item.plannedDate)} · {formatCurrency(item.amount, item.currency)}
+                  </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-stone-500">Geen nieuwe bestanden in de importmap.</p>
+              <p className="text-sm text-stone-500">Geen geplande afschrijvingen in de komende 30 dagen.</p>
             )}
           </div>
         </div>
@@ -224,45 +227,40 @@ export function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.7fr)]">
-        <div className="app-card px-6 py-5">
-          <div className="app-section-kicker">Kosten</div>
-          <h3 className="app-section-title mt-2">Jaarlijkse kostenanalyse</h3>
-          {data.annualCostByType.length ? (
-            <div className="mt-4 overflow-x-auto">
-              <table className="app-table min-w-full text-left text-sm">
-                <thead className="text-stone-500">
-                  <tr>
-                    <th className="pr-4">Type</th>
-                    <th className="pr-4">Aantal</th>
-                    <th className="pr-4">Per maand</th>
-                    <th>Per jaar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.annualCostByType.map((item) => (
-                    <tr className="border-t border-stone-200/70" key={item.typeName}>
-                      <td className="pr-4 font-medium text-ink-900">{item.typeName}</td>
-                      <td className="pr-4 text-stone-600">{item.count}</td>
-                      <td className="pr-4 font-medium text-ink-900">{formatCurrency(item.monthly)}</td>
-                      <td className="text-stone-600">{formatCurrency(item.yearly)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-stone-500">Nog geen actieve verplichtingen voor kostenanalyse.</p>
-          )}
-        </div>
+      <section className="app-card px-6 py-5">
+        <div className="app-section-kicker">Verdeling</div>
+        <h3 className="app-section-title mt-2">Kosten per maand per type</h3>
+        {data.annualCostByType.length ? (
+          <CostBreakdownChart
+            expandedTypes={expandedTypes}
+            items={data.annualCostByType}
+            onToggleType={(typeName) =>
+              setExpandedTypes((current) => (current.includes(typeName) ? current.filter((item) => item !== typeName) : [...current, typeName]))
+            }
+          />
+        ) : (
+          <p className="mt-4 text-sm text-stone-500">Nog geen actieve verplichtingen voor kostenanalyse.</p>
+        )}
+      </section>
 
-        <div className="app-card px-6 py-5">
-          <div className="app-section-kicker">Verdeling</div>
-          <h3 className="app-section-title mt-2">Kosten per maand per type</h3>
-          {data.annualCostByType.length ? (
-            <CostBreakdownChart items={data.annualCostByType} />
+      <section className="app-card px-6 py-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="app-section-kicker">Import</div>
+            <h3 className="app-section-title mt-2">Nieuwe importitems</h3>
+          </div>
+          <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">IMP</div>
+        </div>
+        <div className="mt-4 flex-1 space-y-3">
+          {data.importQueue.length ? (
+            data.importQueue.map((item) => (
+              <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
+                <div className="font-medium text-ink-900">{item.originalFilename}</div>
+                <div className="mt-1 text-sm text-stone-500">{formatFileSize(item.fileSize)} · {formatDate(item.discoveredAt)}</div>
+              </div>
+            ))
           ) : (
-            <p className="mt-4 text-sm text-stone-500">Nog geen actieve verplichtingen voor kostenanalyse.</p>
+            <p className="text-sm text-stone-500">Geen nieuwe bestanden in de importmap.</p>
           )}
         </div>
       </section>
@@ -270,15 +268,23 @@ export function DashboardPage() {
   );
 }
 
-function CostBreakdownChart({ items }: { items: DashboardData["annualCostByType"] }) {
+function CostBreakdownChart({
+  items,
+  expandedTypes,
+  onToggleType,
+}: {
+  items: DashboardData["annualCostByType"];
+  expandedTypes: string[];
+  onToggleType: (typeName: string) => void;
+}) {
   const totalMonthly = items.reduce((sum, item) => sum + item.monthly, 0);
   const radius = 74;
   const circumference = 2 * Math.PI * radius;
   let offset = 0;
 
   return (
-    <div className="mt-4 flex flex-col gap-6">
-      <div className="flex items-center justify-center">
+    <div className="mt-4 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex justify-center xl:w-[340px] xl:shrink-0">
         <div className="relative h-56 w-56">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 200 200">
             <circle cx="100" cy="100" fill="none" r={radius} stroke="#ece7dd" strokeWidth="24" />
@@ -313,30 +319,47 @@ function CostBreakdownChart({ items }: { items: DashboardData["annualCostByType"
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="min-w-0 flex-1 space-y-3">
         {items.map((item, index) => {
           const share = totalMonthly > 0 ? (item.monthly / totalMonthly) * 100 : 0;
+          const isExpanded = expandedTypes.includes(item.typeName);
 
           return (
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-sand-50/80 px-4 py-3" key={item.typeName}>
-              <div className="min-w-0">
-                <div className="flex items-center gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: chartPalette[index % chartPalette.length] }}
-                  />
-                  <span className="truncate font-medium text-ink-900">{item.typeName}</span>
+            <div className="rounded-2xl bg-sand-50/80 px-4 py-3" key={item.typeName}>
+              <button className="flex w-full items-center justify-between gap-3 text-left" onClick={() => onToggleType(item.typeName)} type="button">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: chartPalette[index % chartPalette.length] }}
+                    />
+                    <span className="truncate font-medium text-ink-900">{item.typeName}</span>
+                  </div>
+                  <div className="mt-1 text-sm text-stone-500">
+                    {item.count} posten · {share.toFixed(0)}%
+                  </div>
                 </div>
-                <div className="mt-1 text-sm text-stone-500">
-                  {item.count} posten · {share.toFixed(0)}%
-                </div>
-              </div>
 
-              <div className="text-right">
-                <div className="font-semibold text-ink-900">{formatCurrency(item.monthly)}</div>
-                <div className="mt-1 text-sm text-stone-500">{formatCurrency(item.yearly)} per jaar</div>
-              </div>
+                <div className="text-right">
+                  <div className="font-semibold text-ink-900">{formatCurrency(item.monthly)}</div>
+                  <div className="mt-1 text-sm text-stone-500">{formatCurrency(item.yearly)} per jaar</div>
+                </div>
+              </button>
+
+              {isExpanded ? (
+                <div className="mt-3 space-y-2 border-t border-white/70 pt-3">
+                  {item.obligations.map((obligation) => (
+                    <div className="flex flex-col gap-1 rounded-2xl bg-white/90 px-4 py-3 text-sm text-stone-600 md:flex-row md:items-center md:justify-between" key={obligation.id}>
+                      <div>
+                        <div className="font-medium text-ink-900">{obligation.title}</div>
+                        <div className="mt-1">{obligation.contact?.name ?? obligation.contractNumber ?? obligation.paymentMethod ?? "Geen extra koppeling"}</div>
+                      </div>
+                      <div className="font-semibold text-ink-900">{formatCurrency(obligation.amount, obligation.currency)}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           );
         })}

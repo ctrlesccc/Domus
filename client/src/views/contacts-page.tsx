@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../lib/api";
-import type { Contact, ReferenceItem } from "../types";
+import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
+import type { AppSetting, Contact, ReferenceItem } from "../types";
 import { PageHeader } from "../ui/page-header";
 import { EmptyState } from "../ui/empty-state";
 
@@ -20,7 +21,7 @@ const emptyForm = {
   sendBirthdayCard: false,
   birthDate: "",
   notes: "",
-  dossierTopic: "NONE",
+  dossierTopic: "",
   isActive: true,
 };
 
@@ -33,10 +34,13 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
   const params = useParams();
   const [items, setItems] = useState<Contact[]>([]);
   const [types, setTypes] = useState<ReferenceItem[]>([]);
+  const [settings, setSettings] = useState<AppSetting[]>([]);
   const [query, setQuery] = useState("");
   const [form, setForm] = useState(createEmptyForm(kind));
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [sortKey, setSortKey] = useState<"name" | "type" | "city" | "status">("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const pageTitle = kind === "BUSINESS" ? "Zakelijke contacten" : "Persoonlijke contacten";
   const createPath = kind === "BUSINESS" ? "/contacts/new" : "/personal-contacts/new";
@@ -44,17 +48,19 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
   const selectedId = params.id && params.id !== "new" ? params.id : undefined;
 
   async function load() {
-    const [contacts, contactTypes] = await Promise.all([
+    const [contacts, contactTypes, fetchedSettings] = await Promise.all([
       api.contacts(`?kind=${kind}&q=${encodeURIComponent(query)}`),
       api.contactTypes(),
+      api.settings(),
     ]);
 
     setItems(contacts);
     setTypes(
-      contactTypes.filter((item) =>
+      referenceOptions(contactTypes.filter((item) =>
         kind === "BUSINESS" ? item.category !== "PERSONAL" : item.category !== "BUSINESS",
-      ),
+      )),
     );
+    setSettings(fetchedSettings);
   }
 
   useEffect(() => {
@@ -92,6 +98,25 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
   }, [selectedId, kind]);
 
   const selectedContact = useMemo(() => items.find((item) => String(item.id) === selectedId), [items, selectedId]);
+  const dossiers = dossierSelectOptions(settings);
+  const sortedItems = useMemo(() => {
+    return [...items].sort((left, right) => {
+      const direction = sortDirection === "asc" ? 1 : -1;
+      const leftValue = sortKey === "name" ? left.name : sortKey === "type" ? left.contactType.name : sortKey === "city" ? left.city ?? "" : left.isActive ? "Actief" : "Inactief";
+      const rightValue = sortKey === "name" ? right.name : sortKey === "type" ? right.contactType.name : sortKey === "city" ? right.city ?? "" : right.isActive ? "Actief" : "Inactief";
+      return String(leftValue).localeCompare(String(rightValue), "nl") * direction;
+    });
+  }, [items, sortDirection, sortKey]);
+
+  function toggleSort(nextKey: "name" | "type" | "city" | "status") {
+    if (sortKey === nextKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(nextKey);
+    setSortDirection("asc");
+  }
 
   return (
     <>
@@ -128,14 +153,14 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
               <table className="app-table min-w-full text-left text-sm">
                 <thead className="text-stone-500">
                   <tr>
-                    <th className="pr-4">Naam</th>
-                    <th className="pr-4">Soort</th>
-                    <th className="pr-4">Plaats</th>
-                    <th>Status</th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("name")} type="button">Naam</button></th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("type")} type="button">Soort</button></th>
+                    <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("city")} type="button">Plaats</button></th>
+                    <th><button className="font-medium" onClick={() => toggleSort("status")} type="button">Status</button></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {sortedItems.map((item) => (
                     <tr className="border-t border-stone-200/70 transition hover:bg-white/55" key={item.id}>
                       <td className="pr-4">
                         <Link className="block font-medium text-pine-700 hover:text-pine-600" to={`${listPath}/${item.id}`}>
@@ -250,12 +275,12 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
               <div>
                 <label className="app-label">Dossier</label>
                 <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value })}>
-                  <option value="NONE">Geen dossier</option>
-                  <option value="VERZEKERINGEN">Verzekeringen</option>
-                  <option value="WONEN">Wonen</option>
-                  <option value="ZORG">Zorg</option>
-                  <option value="ENERGIE">Energie</option>
-                  <option value="OVERIG">Overig</option>
+                  <option value="">Geen dossier</option>
+                  {sortByLabel(dossiers.length ? dossiers : defaultDossierOptions, (item) => item).map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
                 </select>
               </div>
               {kind === "PERSONAL" ? (

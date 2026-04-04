@@ -45,7 +45,7 @@ obligationsRouter.get("/", async (request, response) => {
         },
       },
     },
-    orderBy: [{ endDate: "asc" }, { title: "asc" }],
+    orderBy: [{ title: "asc" }],
   });
 
   return response.json(items.map(serializeObligation));
@@ -95,6 +95,8 @@ obligationsRouter.post("/", async (request, response) => {
       showOnDashboard: input.showOnDashboard,
       reminderDate: input.reminderDate,
       reviewDate: input.reviewDate,
+      plannedChargeDay: input.plannedChargeDay,
+      plannedChargeMonth: input.plannedChargeMonth,
       status: input.status,
       notes: input.notes,
       dossierTopic: input.dossierTopic,
@@ -138,6 +140,8 @@ obligationsRouter.put("/:id", async (request, response) => {
       showOnDashboard: input.showOnDashboard,
       reminderDate: input.reminderDate,
       reviewDate: input.reviewDate,
+      plannedChargeDay: input.plannedChargeDay,
+      plannedChargeMonth: input.plannedChargeMonth,
       status: input.status,
       notes: input.notes,
       dossierTopic: input.dossierTopic,

@@ -16,13 +16,14 @@ RUN npm run build
 FROM node:22-bookworm-slim AS runtime
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends sqlite3 \
+  && apt-get install -y --no-install-recommends sqlite3 openssl \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=4000
+ENV DATABASE_URL=file:/app/prisma/dev.db
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
@@ -32,8 +33,7 @@ COPY --from=build /app/client/dist ./client/dist
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/server/package.json ./server/package.json
 COPY --from=build /app/prisma/bootstrap.sql /opt/domus/bootstrap.sql
-COPY --from=build /app/prisma/seed.ts /opt/domus/seed.ts
-COPY --from=build /app/prisma/schema.prisma /opt/domus/schema.prisma
+COPY --from=build /app/prisma/seed.ts ./prisma-seed/seed.ts
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \

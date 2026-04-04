@@ -8,7 +8,7 @@ if [ ! -f /app/prisma/dev.db ]; then
   sqlite3 /app/prisma/dev.db < /opt/domus/bootstrap.sql
   (
     cd /app
-    npx tsx /opt/domus/seed.ts
+    npx tsx prisma-seed/seed.ts
   )
 fi
 

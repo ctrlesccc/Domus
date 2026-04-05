@@ -128,6 +128,7 @@ export type DashboardData = {
   documentsExpiringSoon: DocumentItem[];
   obligationsEndingSoon: Obligation[];
   upcomingPlannedCharges: (Obligation & { plannedDate: string })[];
+  planningWindowDays: number;
   dossierOptions: string[];
   activePolicies: {
     id: number;

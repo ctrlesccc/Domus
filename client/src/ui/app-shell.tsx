@@ -18,7 +18,7 @@ const navigation = [
   { to: "/settings", label: "Instellingen" },
 ];
 
-const appVersion = "v1.5.4";
+const appVersion = "v1.5.5";
 
 type NavigationCounts = Partial<Record<(typeof navigation)[number]["to"], number>>;
 
@@ -34,6 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       .dashboard()
       .then((data) =>
         setCounts({
+          "/dossiers": data.dossierOptions.length,
           "/documents": data.stats.documentCount,
           "/contacts": data.stats.contactCount,
           "/personal-contacts": data.stats.personalContactCount,

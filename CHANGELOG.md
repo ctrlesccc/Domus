@@ -2,6 +2,12 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.5.5] - 2026-04-05
+
+### Changed
+- Dossierblokken op de dossierpagina inklapbaar gemaakt voor een compacter overzicht.
+- Aantal dossiers toegevoegd aan de linkernavigatie.
+
 ## [1.5.4] - 2026-04-05
 
 ### Changed

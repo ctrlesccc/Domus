@@ -18,6 +18,7 @@ export function DossiersPage() {
   const [dragItem, setDragItem] = useState<DragItem | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [collapsedDossiers, setCollapsedDossiers] = useState<string[]>([]);
 
   async function load() {
     const next = await api.dossiers();
@@ -90,17 +91,31 @@ export function DossiersPage() {
               }
             }}
           >
-            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <button
+              className="flex w-full flex-col gap-2 text-left md:flex-row md:items-end md:justify-between"
+              onClick={() =>
+                setCollapsedDossiers((current) =>
+                  current.includes(dossier.key) ? current.filter((key) => key !== dossier.key) : [...current, dossier.key],
+                )
+              }
+              type="button"
+            >
               <div>
                 <h3 className="app-section-title">{dossier.title}</h3>
               </div>
-              <div className="text-right text-sm text-stone-500">
-                <div>{dossier.summary}</div>
-                {dropTarget === dossier.key ? <div className="mt-1 text-xs">Laat hier los om toe te wijzen</div> : null}
+              <div className="flex items-center justify-between gap-3 md:text-right text-sm text-stone-500">
+                <div>
+                  <div>{dossier.summary}</div>
+                  {dropTarget === dossier.key ? <div className="mt-1 text-xs">Laat hier los om toe te wijzen</div> : null}
+                </div>
+                <div className="shrink-0 text-lg leading-none text-stone-400">
+                  {collapsedDossiers.includes(dossier.key) ? "+" : "-"}
+                </div>
               </div>
-            </div>
+            </button>
 
-            <div className="mt-5 grid gap-4 xl:grid-cols-3">
+            {!collapsedDossiers.includes(dossier.key) ? (
+              <div className="mt-5 grid gap-4 xl:grid-cols-3">
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Documenten</div>
                 <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
@@ -203,6 +218,7 @@ export function DossiersPage() {
                 </div>
               </div>
             </div>
+            ) : null}
           </div>
         ))}
       </section>

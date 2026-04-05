@@ -219,7 +219,17 @@ export function SettingsPage() {
                 }}
                 setting={settings.find((item) => item.key === "options.dossiers") ?? null}
               />
-              {settings.filter((item) => !["options.paymentMethods", "options.dossiers"].includes(item.key)).map((item) => (
+              <NumberSettingEditor
+                description="Bepaalt hoeveel dagen vooruit het planningblok op het dashboard toont."
+                label="Planningvenster dashboard"
+                onSave={async (item, value) => {
+                  await api.updateSetting(item.id, { key: item.key, value: String(value) });
+                  await load();
+                }}
+                setting={settings.find((item) => item.key === "dashboard.expiryWindowDays") ?? null}
+                suffix="dagen"
+              />
+              {settings.filter((item) => !["options.paymentMethods", "options.dossiers", "dashboard.expiryWindowDays"].includes(item.key)).map((item) => (
                 <SettingRow
                   key={item.id}
                   onSave={async (value) => {
@@ -251,6 +261,57 @@ export function SettingsPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function NumberSettingEditor({
+  setting,
+  label,
+  description,
+  suffix,
+  onSave,
+}: {
+  setting: AppSetting | null;
+  label: string;
+  description: string;
+  suffix?: string;
+  onSave: (setting: AppSetting, value: number) => Promise<void>;
+}) {
+  const [value, setValue] = useState(setting?.value ?? "30");
+
+  useEffect(() => {
+    setValue(setting?.value ?? "30");
+  }, [setting]);
+
+  if (!setting) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3 rounded-[1.35rem] bg-white/65 p-4">
+      <div>
+        <div className="text-sm font-semibold text-stone-700">{label}</div>
+        <div className="mt-1 text-sm text-stone-500">{description}</div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          className="app-input w-32"
+          min="1"
+          step="1"
+          type="number"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
+        {suffix ? <div className="text-sm text-stone-500">{suffix}</div> : null}
+        <button
+          className="app-button"
+          onClick={() => onSave(setting, Math.min(365, Math.max(1, Number(value) || 30)))}
+          type="button"
+        >
+          Opslaan
+        </button>
+      </div>
+    </div>
   );
 }
 

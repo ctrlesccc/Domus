@@ -51,12 +51,27 @@ function buildNextPlannedDate(input: {
     : new Date(today.getFullYear() + 1, plannedChargeMonth - 1, plannedChargeDay);
 }
 
+function normalizeDashboardWindowDays(value: string | null | undefined) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 30;
+  }
+
+  return Math.min(365, Math.max(1, Math.round(parsed)));
+}
+
 dashboardRouter.get("/", async (_request, response) => {
   const today = new Date();
+  const year = today.getFullYear();
+  const [dossierOptions, planningWindowSetting] = await Promise.all([
+    getOptionList("options.dossiers", []),
+    prisma.appSetting.findUnique({ where: { key: "dashboard.expiryWindowDays" } }),
+  ]);
+  const planningWindowDays = normalizeDashboardWindowDays(planningWindowSetting?.value);
   const next30Days = new Date();
   next30Days.setDate(today.getDate() + 30);
-  const year = today.getFullYear();
-  const dossierOptions = await getOptionList("options.dossiers", []);
+  const nextPlanningDays = new Date();
+  nextPlanningDays.setDate(today.getDate() + planningWindowDays);
 
   const [
     documentsExpiringSoon,
@@ -175,7 +190,7 @@ dashboardRouter.get("/", async (_request, response) => {
       };
     })
     .filter((item): item is { obligation: (typeof activeObligations)[number]; plannedDate: Date } => Boolean(item.plannedDate))
-    .filter((item) => item.plannedDate >= today && item.plannedDate <= next30Days)
+    .filter((item) => item.plannedDate >= today && item.plannedDate <= nextPlanningDays)
     .sort((left, right) => left.plannedDate.getTime() - right.plannedDate.getTime())
     .slice(0, 8)
     .map((item) => ({
@@ -269,6 +284,7 @@ dashboardRouter.get("/", async (_request, response) => {
     documentsExpiringSoon: documentsExpiringSoon.map(serializeDocument),
     obligationsEndingSoon: obligationsEndingSoon.map(serializeObligation),
     upcomingPlannedCharges,
+    planningWindowDays,
     activePolicies,
     policyGroups: [...groupedPoliciesMap.values()],
     costSummary,

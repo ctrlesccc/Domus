@@ -229,22 +229,15 @@ export function DashboardPage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="app-section-kicker">Planning</div>
-              <h3 className="app-section-title mt-2">Komende afschrijvingen (30 dagen)</h3>
+              <h3 className="app-section-title mt-2">Komende afschrijvingen ({data.planningWindowDays} dagen)</h3>
             </div>
             <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">PLN</div>
           </div>
-          <div className="mt-4 flex-1 space-y-3">
+          <div className="mt-4 flex-1">
             {data.upcomingPlannedCharges.length ? (
-              data.upcomingPlannedCharges.map((item) => (
-                <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
-                  <div className="font-medium text-ink-900">{item.title}</div>
-                  <div className="mt-1 text-sm text-stone-500">
-                    {item.obligationType.name} · {formatDate(item.plannedDate)} · {formatCurrency(item.amount, item.currency)}
-                  </div>
-                </div>
-              ))
+              <PlanningBreakdown items={data.upcomingPlannedCharges} />
             ) : (
-              <p className="text-sm text-stone-500">Geen geplande afschrijvingen in de komende 30 dagen.</p>
+              <p className="text-sm text-stone-500">Geen geplande afschrijvingen in de komende {data.planningWindowDays} dagen.</p>
             )}
           </div>
         </div>
@@ -272,6 +265,102 @@ export function DashboardPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function PlanningBreakdown({ items }: { items: DashboardData["upcomingPlannedCharges"] }) {
+  const totalsByMethod = new Map<string, { method: string; total: number; count: number }>();
+
+  for (const item of items) {
+    const method = item.paymentMethod || "Onbekend";
+    const current = totalsByMethod.get(method) ?? { method, total: 0, count: 0 };
+    current.total += item.amount;
+    current.count += 1;
+    totalsByMethod.set(method, current);
+  }
+
+  const chartItems = [...totalsByMethod.values()].sort((left, right) => right.total - left.total);
+  const totalAmount = chartItems.reduce((sum, item) => sum + item.total, 0);
+  const radius = 58;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
+      <div className="flex justify-center xl:w-[220px] xl:shrink-0">
+        <div className="relative h-44 w-44">
+          <svg className="h-full w-full -rotate-90" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" fill="none" r={radius} stroke="#ece7dd" strokeWidth="24" />
+            {chartItems.map((item, index) => {
+              const value = totalAmount > 0 ? item.total / totalAmount : 0;
+              const strokeLength = value * circumference;
+              const strokeDashoffset = -offset;
+              offset += strokeLength;
+
+              return (
+                <circle
+                  cx="100"
+                  cy="100"
+                  fill="none"
+                  key={item.method}
+                  r={radius}
+                  stroke={chartPalette[index % chartPalette.length]}
+                  strokeDasharray={`${strokeLength} ${circumference}`}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  strokeWidth="24"
+                />
+              );
+            })}
+          </svg>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500">Planning</div>
+            <div className="mt-2 text-xl font-semibold tracking-tight text-ink-900">{formatCurrency(totalAmount)}</div>
+            <div className="mt-1 text-sm text-stone-500">{chartItems.length} betaalwijzen</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1 space-y-3">
+        <div className="rounded-2xl bg-sand-50/70 px-4 py-3">
+          <div className="space-y-2">
+            {chartItems.map((item, index) => {
+              const share = totalAmount > 0 ? (item.total / totalAmount) * 100 : 0;
+
+              return (
+                <div className="flex items-center justify-between gap-3 text-sm" key={item.method}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: chartPalette[index % chartPalette.length] }}
+                    />
+                    <span className="truncate text-stone-700">{item.method}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium text-ink-900">{formatCurrency(item.total)}</div>
+                    <div className="text-xs text-stone-500">{item.count} posten · {share.toFixed(0)}%</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {items.map((item) => (
+            <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
+              <div className="font-medium text-ink-900">{item.title}</div>
+              <div className="mt-1 text-sm text-stone-500">
+                {item.obligationType.name} · {item.paymentMethod || "Geen betaalwijze"}
+              </div>
+              <div className="mt-1 text-sm text-stone-500">{formatDate(item.plannedDate)} · {formatCurrency(item.amount, item.currency)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

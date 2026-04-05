@@ -58,6 +58,11 @@ settingsRouter.put("/:id", async (request, response) => {
     }
   }
 
+  if (existing?.key === "dashboard.expiryWindowDays") {
+    const parsed = Number(input.value);
+    input.value = String(Number.isFinite(parsed) ? Math.min(365, Math.max(1, Math.round(parsed))) : 30);
+  }
+
   const item = await prisma.appSetting.update({
     where: { id },
     data: input,

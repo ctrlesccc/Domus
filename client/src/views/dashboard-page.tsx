@@ -208,7 +208,7 @@ export function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(440px,0.88fr)]">
         <div className="app-card px-6 py-5">
           <div className="app-section-kicker">Verdeling</div>
           <h3 className="app-section-title mt-2">Kosten per maand per type</h3>
@@ -286,8 +286,8 @@ function PlanningBreakdown({ items }: { items: DashboardData["upcomingPlannedCha
   let offset = 0;
 
   return (
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
-      <div className="flex justify-center xl:w-[220px] xl:shrink-0">
+    <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start">
+      <div className="flex justify-center 2xl:w-[230px] 2xl:shrink-0">
         <div className="relative h-44 w-44">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 200 200">
             <circle cx="100" cy="100" fill="none" r={radius} stroke="#ece7dd" strokeWidth="24" />
@@ -348,7 +348,7 @@ function PlanningBreakdown({ items }: { items: DashboardData["upcomingPlannedCha
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-1">
           {items.map((item) => (
             <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
               <div className="font-medium text-ink-900">{item.title}</div>
@@ -380,7 +380,7 @@ function CostBreakdownChart({
 
   return (
     <div className="mt-4 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-      <div className="flex justify-center xl:w-[340px] xl:shrink-0">
+      <div className="flex justify-center xl:w-[290px] xl:shrink-0 2xl:w-[310px]">
         <div className="relative h-56 w-56">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 200 200">
             <circle cx="100" cy="100" fill="none" r={radius} stroke="#ece7dd" strokeWidth="24" />

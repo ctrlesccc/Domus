@@ -1,5 +1,6 @@
 import { Router } from "express";
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import { ImportStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
@@ -57,6 +58,33 @@ importsRouter.get("/", async (_request, response) => {
 importsRouter.post("/sync", async (_request, response) => {
   await syncImportFolder();
   return response.json({ success: true });
+});
+
+importsRouter.delete("/:id", async (request, response) => {
+  const id = Number(request.params.id);
+  const item = await prisma.importDocument.findUnique({ where: { id } });
+
+  if (!item) {
+    return response.status(404).json({ message: "Importitem niet gevonden." });
+  }
+
+  if (item.status === "IMPORTED") {
+    return response.status(409).json({ message: "Verwerkte importitems kunnen niet meer uit de queue worden verwijderd." });
+  }
+
+  await fs.rm(item.sourcePath, { force: true }).catch(() => undefined);
+  await prisma.importDocument.delete({ where: { id } });
+
+  await writeAuditLog({
+    entityType: "import-document",
+    entityId: id,
+    action: "delete",
+    ...auditActorFromRequest(request),
+    oldValue: item,
+    newValue: { deleted: true },
+  });
+
+  return response.status(204).send();
 });
 
 importsRouter.post("/:id/finalize", async (request, response) => {

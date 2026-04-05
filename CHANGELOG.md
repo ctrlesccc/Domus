@@ -2,6 +2,16 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.5.3] - 2026-04-05
+
+### Added
+- Verwijderoptie toegevoegd aan de importqueue, inclusief serverroute en auditregistratie.
+
+### Changed
+- Dashboardstatistiekkaarten klikbaar gemaakt zodat ze direct naar het juiste onderdeel navigeren.
+- Dossierpagina opgeschoond door het woord `Onderwerp` en de tekst `Sleep items naar een ander dossier` te verwijderen.
+- Dossierkolommen voorzien van een maximale hoogte, zodat ongeveer vijf items zichtbaar blijven en langere lijsten intern scrollen.
+
 ## [1.5.2] - 2026-04-04
 
 ### Changed

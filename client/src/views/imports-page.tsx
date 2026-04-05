@@ -30,6 +30,7 @@ export function ImportsPage() {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function load() {
     const [imports, types, fetchedContacts, fetchedObligations, fetchedSettings] = await Promise.all([
@@ -323,6 +324,29 @@ export function ImportsPage() {
               <div className="flex flex-wrap gap-3">
                 <button className="app-button" disabled={isSaving} type="submit">
                   {isSaving ? "Bezig..." : "Concept goedkeuren en opnemen"}
+                </button>
+                <button
+                  className="app-button-secondary border-red-200 text-red-700 hover:bg-red-50"
+                  disabled={isDeleting || isSaving}
+                  onClick={async () => {
+                    if (!selectedItem || !window.confirm(`Weet je zeker dat je ${selectedItem.originalFilename} uit de importqueue wilt verwijderen?`)) {
+                      return;
+                    }
+
+                    setError("");
+                    setIsDeleting(true);
+                    try {
+                      await api.deleteImport(selectedItem.id);
+                      await load();
+                    } catch (deleteError) {
+                      setError(deleteError instanceof Error ? deleteError.message : "Importitem verwijderen mislukt.");
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  }}
+                  type="button"
+                >
+                  {isDeleting ? "Verwijderen..." : "Verwijderen uit queue"}
                 </button>
               </div>
             </form>

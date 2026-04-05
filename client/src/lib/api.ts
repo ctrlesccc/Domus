@@ -38,6 +38,7 @@ export const api = {
   audit: (query = "") => request<AuditEntry[]>(`/api/audit${query}`),
   imports: () => request<ImportItem[]>("/api/imports"),
   syncImports: () => request<{ success: true }>("/api/imports/sync", { method: "POST" }),
+  deleteImport: (id: number) => request<void>(`/api/imports/${id}`, { method: "DELETE" }),
   finalizeImport: (id: number, payload: unknown) => request<{ documentId: number }>(`/api/imports/${id}/finalize`, { method: "POST", body: JSON.stringify(payload) }),
 
   contacts: (query = "") => request<Contact[]>(`/api/contacts${query}`),

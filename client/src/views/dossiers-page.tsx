@@ -40,7 +40,7 @@ export function DossiersPage() {
     <>
       <PageHeader
         eyebrow="Dossiers"
-        title="Dossiers per onderwerp"
+        title="Dossiers"
         description="Bekijk documenten, contacten en verplichtingen gegroepeerd per thema zoals Verzekeringen, Wonen, Zorg en Energie."
       />
 
@@ -92,19 +92,18 @@ export function DossiersPage() {
           >
             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
-                <div className="app-section-kicker">Onderwerp</div>
-                <h3 className="app-section-title mt-2">{dossier.title}</h3>
+                <h3 className="app-section-title">{dossier.title}</h3>
               </div>
               <div className="text-right text-sm text-stone-500">
                 <div>{dossier.summary}</div>
-                <div className="mt-1 text-xs">{dropTarget === dossier.key ? "Laat hier los om toe te wijzen" : "Sleep items naar een ander dossier"}</div>
+                {dropTarget === dossier.key ? <div className="mt-1 text-xs">Laat hier los om toe te wijzen</div> : null}
               </div>
             </div>
 
             <div className="mt-5 grid gap-4 xl:grid-cols-3">
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Documenten</div>
-                <div className="mt-3 space-y-3">
+                <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
                   {dossier.documents.length ? dossier.documents.map((item) => (
                     <div
                       className="rounded-2xl bg-white/90 px-4 py-3 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
@@ -138,7 +137,7 @@ export function DossiersPage() {
 
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Verplichtingen</div>
-                <div className="mt-3 space-y-3">
+                <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
                   {dossier.obligations.length ? dossier.obligations.map((item) => (
                     <div
                       className="rounded-2xl bg-white/90 px-4 py-3 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
@@ -172,7 +171,7 @@ export function DossiersPage() {
 
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Contacten</div>
-                <div className="mt-3 space-y-3">
+                <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
                   {dossier.contacts.length ? dossier.contacts.map((item) => (
                     <div
                       className="rounded-2xl bg-white/90 px-4 py-3 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"

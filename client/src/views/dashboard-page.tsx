@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "../ui/page-header";
 import { api } from "../lib/api";
 import type { DashboardData } from "../types";
@@ -6,14 +7,14 @@ import { formatCurrency, formatDate, formatFileSize } from "../lib/format";
 
 const chartPalette = ["#2e4742", "#6e8a83", "#c29a69", "#8e5a34", "#9aa79f", "#d7b98c"];
 const dashboardStatCards = [
-  { label: "Documenten", accent: "bg-pine-700/10 text-pine-700", icon: "DOC" },
-  { label: "Zakelijke contacten", accent: "bg-sand-100 text-sand-500", icon: "REL" },
-  { label: "Persoonlijke contacten", accent: "bg-rose-100 text-rose-700", icon: "PRS" },
-  { label: "Verplichtingen", accent: "bg-amber-100 text-amber-700", icon: "VST" },
-  { label: "Actieve verplichtingen", accent: "bg-emerald-100 text-emerald-700", icon: "ACT" },
-  { label: "Importqueue", accent: "bg-stone-200 text-stone-700", icon: "IMP" },
-  { label: "Per maand", accent: "bg-stone-200 text-stone-700", icon: "PMD" },
-  { label: "Per jaar", accent: "bg-ink-900/10 text-ink-900", icon: "PJR" },
+  { label: "Documenten", accent: "bg-pine-700/10 text-pine-700", icon: "DOC", to: "/documents" },
+  { label: "Zakelijke contacten", accent: "bg-sand-100 text-sand-500", icon: "REL", to: "/contacts" },
+  { label: "Persoonlijke contacten", accent: "bg-rose-100 text-rose-700", icon: "PRS", to: "/personal-contacts" },
+  { label: "Verplichtingen", accent: "bg-amber-100 text-amber-700", icon: "VST", to: "/obligations" },
+  { label: "Actieve verplichtingen", accent: "bg-emerald-100 text-emerald-700", icon: "ACT", to: "/obligations" },
+  { label: "Importqueue", accent: "bg-stone-200 text-stone-700", icon: "IMP", to: "/imports" },
+  { label: "Per maand", accent: "bg-stone-200 text-stone-700", icon: "PMD", to: "/obligations" },
+  { label: "Per jaar", accent: "bg-ink-900/10 text-ink-900", icon: "PJR", to: "/obligations" },
 ] as const;
 
 export function DashboardPage() {
@@ -53,7 +54,11 @@ export function DashboardPage() {
           ["Per maand", formatCurrency(data.costSummary.monthly)],
           ["Per jaar", formatCurrency(data.costSummary.yearly)],
         ].map(([label, value], index) => (
-          <div className="app-card flex min-h-24 flex-col justify-between px-4 py-4 sm:px-5" key={label}>
+          <Link
+            className="app-card flex min-h-24 flex-col justify-between px-4 py-4 transition hover:-translate-y-0.5 hover:bg-white sm:px-5"
+            key={label}
+            to={dashboardStatCards[index].to}
+          >
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <div className="min-h-[2.75rem] pr-1 text-[13px] font-medium leading-5 text-stone-500 sm:min-h-[2.5rem]">
                 {label}
@@ -74,7 +79,7 @@ export function DashboardPage() {
             >
               {value}
             </div>
-          </div>
+          </Link>
         ))}
       </section>
 

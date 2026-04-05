@@ -208,7 +208,7 @@ export function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(440px,0.88fr)]">
+      <section className="grid gap-3 xl:grid-cols-2">
         <div className="app-card px-6 py-5">
           <div className="app-section-kicker">Verdeling</div>
           <h3 className="app-section-title mt-2">Kosten per maand per type</h3>

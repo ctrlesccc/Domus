@@ -281,14 +281,14 @@ function PlanningBreakdown({ items }: { items: DashboardData["upcomingPlannedCha
 
   const chartItems = [...totalsByMethod.values()].sort((left, right) => right.total - left.total);
   const totalAmount = chartItems.reduce((sum, item) => sum + item.total, 0);
-  const radius = 58;
+  const radius = 74;
   const circumference = 2 * Math.PI * radius;
   let offset = 0;
 
   return (
     <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start">
-      <div className="flex justify-center 2xl:w-[230px] 2xl:shrink-0">
-        <div className="relative h-44 w-44">
+      <div className="flex justify-center 2xl:w-[290px] 2xl:shrink-0 2xl:w-[310px]">
+        <div className="relative h-56 w-56">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 200 200">
             <circle cx="100" cy="100" fill="none" r={radius} stroke="#ece7dd" strokeWidth="24" />
             {chartItems.map((item, index) => {
@@ -316,7 +316,7 @@ function PlanningBreakdown({ items }: { items: DashboardData["upcomingPlannedCha
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500">Planning</div>
-            <div className="mt-2 text-xl font-semibold tracking-tight text-ink-900">{formatCurrency(totalAmount)}</div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight text-ink-900">{formatCurrency(totalAmount)}</div>
             <div className="mt-1 text-sm text-stone-500">{chartItems.length} betaalwijzen</div>
           </div>
         </div>

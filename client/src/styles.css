@@ -55,6 +55,10 @@ textarea {
   font: inherit;
 }
 
+input[type="checkbox"] {
+  accent-color: var(--color-pine-700);
+}
+
 .app-card {
   @apply rounded-[1.5rem] bg-white/84 shadow-[0_10px_30px_rgba(29,28,23,0.05)] ring-1 ring-white/70 backdrop-blur-md;
 }

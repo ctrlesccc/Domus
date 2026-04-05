@@ -2,6 +2,11 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.5.4] - 2026-04-05
+
+### Changed
+- Checkboxen visueel afgestemd op de primaire buttons door dezelfde pine-groene accentkleur te gebruiken.
+
 ## [1.5.3] - 2026-04-05
 
 ### Added

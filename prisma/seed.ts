@@ -1,10 +1,38 @@
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient, ContactKind, ContactTypeCategory, ObligationFrequency, UserRole } from "@prisma/client";
+import path from "node:path";
 
 dotenv.config();
 
-const prisma = new PrismaClient();
+const toPosixPath = (value: string) => value.replace(/\\/g, "/");
+
+const resolveDatabaseUrl = () => {
+  const databaseUrl = process.env.DATABASE_URL;
+  const prismaDirectory = path.resolve(process.cwd(), "prisma");
+
+  if (!databaseUrl) {
+    return `file:${toPosixPath(path.join(prismaDirectory, "dev.db"))}`;
+  }
+
+  if (!databaseUrl.startsWith("file:")) {
+    return databaseUrl;
+  }
+
+  const filePath = databaseUrl.slice("file:".length);
+  if (path.isAbsolute(filePath)) {
+    return `file:${toPosixPath(filePath)}`;
+  }
+
+  return `file:${toPosixPath(path.resolve(prismaDirectory, filePath))}`;
+};
+
+const prisma = new PrismaClient({
+  adapter: new PrismaBetterSqlite3({
+    url: resolveDatabaseUrl(),
+  }),
+});
 
 async function main() {
   const username = process.env.DEFAULT_ADMIN_USERNAME ?? "admin";

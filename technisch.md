@@ -11,17 +11,17 @@ Dit document beschrijft de technische architectuur, applicatielagen, data-opbouw
 ### Frontend
 
 - React 19
-- TypeScript
+- TypeScript 6
 - React Router
-- Vite
+- Vite 8
 - Tailwind CSS 4
 
 ### Backend
 
 - Node.js 22
 - Express 5
-- TypeScript
-- Prisma Client
+- TypeScript 6
+- Prisma Client 7
 - JWT-authenticatie via cookies
 - Multer voor uploads
 - Tesseract.js voor OCR op afbeeldingen
@@ -78,6 +78,7 @@ Opslaggebieden:
 
 - `prisma/dev.db` voor SQLite
 - `storage/documents` voor definitieve documenten
+- `prisma.config.ts` voor Prisma CLI-configuratie en datasource-resolutie
 - `storage/import` voor nieuwe imports
 - `backups` voor back-upbestanden
 

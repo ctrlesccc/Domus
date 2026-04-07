@@ -2,6 +2,14 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.6.0] - 2026-04-07
+
+### Changed
+- Alle npm-dependencies in root, client en server bijgewerkt naar de laatst beschikbare versies.
+- Prisma bijgewerkt naar versie 7 met centrale CLI-configuratie via `prisma.config.ts`.
+- Server en seed-script aangepast op de nieuwe Prisma SQLite-adapter.
+- Technische documentatie en README bijgewerkt op de dependency- en Prisma-configuratiewijzigingen.
+
 ## [1.5.5] - 2026-04-05
 
 ### Changed

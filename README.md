@@ -31,5 +31,6 @@ Uploaded files are stored in `storage/documents`.
 ## Notes
 
 - The Prisma schema is included and Prisma Client is used by the app.
+- Prisma CLI is configured via the root `prisma.config.ts` file.
 - In this environment, Prisma schema-engine commands such as `migrate dev` and `db push` can fail for SQLite, so the initial database bootstrap is handled with `sqlite3` via `prisma/bootstrap.sql`.
 - Existing Docker deployments apply bundled SQLite migration scripts during container startup when required.

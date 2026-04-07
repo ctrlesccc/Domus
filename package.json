@@ -1,7 +1,7 @@
 {
   "name": "domus",
   "private": true,
-  "version": "1.5.5",
+  "version": "1.6.0",
   "workspaces": [
     "client",
     "server"
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "prisma": "^6.7.0",
-    "tsx": "^4.20.6"
+    "prisma": "^7.7.0",
+    "tsx": "^4.21.0"
   }
 }

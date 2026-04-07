@@ -124,6 +124,7 @@ documentsRouter.post("/", upload.single("file"), async (request, response) => {
       contactId: primaryContactId,
       expiryDate: input.expiryDate,
       documentDate: input.documentDate,
+      isImportant: input.isImportant,
       status: input.status,
       notes: input.notes,
       dossierTopic: input.dossierTopic,
@@ -150,6 +151,7 @@ documentsRouter.post("/", upload.single("file"), async (request, response) => {
       contactIds,
       obligationIds: input.obligationIds,
       status: input.status,
+      isImportant: input.isImportant,
     },
   });
   return response.status(201).json(serializeDocument(item));
@@ -195,6 +197,7 @@ documentsRouter.put("/:id", upload.single("file"), async (request, response) => 
         contactId: primaryContactId,
         expiryDate: input.expiryDate,
         documentDate: input.documentDate,
+        isImportant: input.isImportant,
         status: input.status,
         notes: input.notes,
         dossierTopic: input.dossierTopic,
@@ -225,6 +228,7 @@ documentsRouter.put("/:id", upload.single("file"), async (request, response) => 
         contactIds,
         obligationIds: input.obligationIds,
         status: input.status,
+        isImportant: input.isImportant,
       },
     });
     return response.json(serializeDocument(newVersion));
@@ -263,6 +267,7 @@ documentsRouter.put("/:id", upload.single("file"), async (request, response) => 
       contactId: primaryContactId,
       expiryDate: input.expiryDate,
       documentDate: input.documentDate,
+      isImportant: input.isImportant,
       status: input.status,
       notes: input.notes,
       dossierTopic: input.dossierTopic,
@@ -290,6 +295,7 @@ documentsRouter.put("/:id", upload.single("file"), async (request, response) => 
       contactIds,
       obligationIds: input.obligationIds,
       status: input.status,
+      isImportant: input.isImportant,
     },
   });
   return response.json(serializeDocument(item));

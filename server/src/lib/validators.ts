@@ -209,6 +209,7 @@ export const documentSchema = z.object({
     }),
   expiryDate: optionalDate,
   documentDate: optionalDate,
+  isImportant: optionalBoolean.default(false),
   status: z.enum(["ACTIVE", "EXPIRED", "ARCHIVED"]).default("ACTIVE"),
   notes: optionalString,
   dossierTopic: optionalString.default(""),

@@ -54,6 +54,7 @@ Een document bevat naast het bestand ook functionele metadata zoals:
 - documentsoort
 - documentdatum
 - vervaldatum
+- markering als belangrijk document
 - status
 - notities
 - gekoppelde contacten
@@ -197,6 +198,7 @@ Belangrijkste onderdelen:
 - statistiekkaarten voor aantallen documenten, contacten, verplichtingen en kosten
 - signalen voor bijna verlopen documenten
 - signalen voor aflopende verplichtingen
+- blok met belangrijke documenten voor snelle opvolging
 - blok met nieuwe importitems
 - groepering van polissen per verzekeraar
 - datakwaliteitsblokken voor ontbrekende gegevens
@@ -235,6 +237,8 @@ De documenteditor wordt gebruikt voor:
 - aanmaken van een nieuwe versie van een bestaand document
 
 Hier komen bestand, metadata, relaties en status samen.
+
+De editor bevat ook een checkbox om een document als belangrijk te markeren. Deze markering wordt gebruikt op het dashboard om kritieke documenten snel zichtbaar te maken.
 
 ### 6.5 Contacten
 

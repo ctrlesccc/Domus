@@ -152,6 +152,7 @@ model Document {
   contactId        Int?
   expiryDate       DateTime?
   documentDate     DateTime?
+  isImportant      Boolean        @default(false)
   status           DocumentStatus @default(ACTIVE)
   notes            String?
   dossierTopic     String         @default("")

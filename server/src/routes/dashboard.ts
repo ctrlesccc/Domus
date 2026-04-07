@@ -76,6 +76,7 @@ dashboardRouter.get("/", async (_request, response) => {
   const [
     documentsExpiringSoon,
     obligationsEndingSoon,
+    importantDocuments,
     activePolicyDocuments,
     activeObligations,
     documentCount,
@@ -110,6 +111,21 @@ dashboardRouter.get("/", async (_request, response) => {
       include: { obligationType: true, contact: true },
       orderBy: { endDate: "asc" },
       take: 5,
+    }),
+    prisma.document.findMany({
+      where: {
+        isImportant: true,
+        deletedAt: null,
+        isLatestVersion: true,
+      },
+      include: {
+        documentType: true,
+        contact: true,
+        documentContacts: { include: { contact: true } },
+        obligationDocuments: { include: { obligation: true } },
+      },
+      orderBy: [{ updatedAt: "desc" }, { title: "asc" }],
+      take: 6,
     }),
     prisma.document.findMany({
       where: {
@@ -283,6 +299,7 @@ dashboardRouter.get("/", async (_request, response) => {
     },
     documentsExpiringSoon: documentsExpiringSoon.map(serializeDocument),
     obligationsEndingSoon: obligationsEndingSoon.map(serializeObligation),
+    importantDocuments: importantDocuments.map(serializeDocument),
     upcomingPlannedCharges,
     planningWindowDays,
     activePolicies,

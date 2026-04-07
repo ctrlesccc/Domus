@@ -19,7 +19,7 @@ DOMUS is a self-hosted household administration app for managing documents, cont
 5. Run `npm run prisma:seed`.
 6. Run `npm run dev`.
 
-If you already have an existing local database and update to a newer DOMUS version with schema changes, run the matching migration script as needed, for example `npm run db:migrate:v7`.
+If you already have an existing local database and update to a newer DOMUS version with schema changes, run the matching migration script as needed, for example `npm run db:migrate:v8`.
 
 Default login:
 

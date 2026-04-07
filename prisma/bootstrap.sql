@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS documents (
   contactId INTEGER,
   expiryDate DATETIME,
   documentDate DATETIME,
+  isImportant BOOLEAN NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'ACTIVE',
   notes TEXT,
   dossierTopic TEXT NOT NULL DEFAULT '',

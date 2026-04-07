@@ -171,38 +171,69 @@ export function DashboardPage() {
           )}
         </div>
 
-        <div className="app-card h-full px-6 py-5">
-          <div className="app-section-kicker">Datakwaliteit</div>
-          <h3 className="app-section-title mt-2">Mist gegevens</h3>
-          <div className="mt-4 space-y-5">
-            <div>
-              <div className="text-sm font-semibold text-stone-700">Polissen zonder documentdatum</div>
-              <div className="mt-3 space-y-2">
-                {data.missingData.documentsWithoutDate.length ? (
-                  data.missingData.documentsWithoutDate.map((item) => (
-                    <a className="block rounded-2xl bg-sand-50/80 px-4 py-3 text-sm text-pine-700 hover:text-pine-600 hover:underline" href={item.downloadUrl} key={item.id} rel="noreferrer" target="_blank">
-                      {item.title}
-                    </a>
-                  ))
-                ) : (
-                  <p className="text-sm text-stone-500">Geen missende documentdata.</p>
-                )}
+        <div className="grid gap-3">
+          <div className="app-card h-full px-6 py-5">
+            <div className="app-section-kicker">Datakwaliteit</div>
+            <h3 className="app-section-title mt-2">Mist gegevens</h3>
+            <div className="mt-4 space-y-5">
+              <div>
+                <div className="text-sm font-semibold text-stone-700">Polissen zonder documentdatum</div>
+                <div className="mt-3 space-y-2">
+                  {data.missingData.documentsWithoutDate.length ? (
+                    data.missingData.documentsWithoutDate.map((item) => (
+                      <a className="block rounded-2xl bg-sand-50/80 px-4 py-3 text-sm text-pine-700 hover:text-pine-600 hover:underline" href={item.downloadUrl} key={item.id} rel="noreferrer" target="_blank">
+                        {item.title}
+                      </a>
+                    ))
+                  ) : (
+                    <p className="text-sm text-stone-500">Geen missende documentdata.</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-semibold text-stone-700">Verplichtingen zonder bedrag</div>
+                <div className="mt-3 space-y-2">
+                  {data.missingData.obligationsWithoutAmount.length ? (
+                    data.missingData.obligationsWithoutAmount.map((item) => (
+                      <div className="rounded-2xl bg-sand-50/80 px-4 py-3 text-sm text-stone-700" key={item.id}>
+                        {item.title}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-stone-500">Geen verplichtingen zonder bedrag.</p>
+                  )}
+                </div>
               </div>
             </div>
+          </div>
 
-            <div>
-              <div className="text-sm font-semibold text-stone-700">Verplichtingen zonder bedrag</div>
-              <div className="mt-3 space-y-2">
-                {data.missingData.obligationsWithoutAmount.length ? (
-                  data.missingData.obligationsWithoutAmount.map((item) => (
-                    <div className="rounded-2xl bg-sand-50/80 px-4 py-3 text-sm text-stone-700" key={item.id}>
-                      {item.title}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-stone-500">Geen verplichtingen zonder bedrag.</p>
-                )}
+          <div className="app-card h-full px-6 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="app-section-kicker">Belangrijk</div>
+                <h3 className="app-section-title mt-2">Belangrijke documenten</h3>
               </div>
+              <div className="rounded-full bg-rose-100 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-rose-700">IMP</div>
+            </div>
+            <div className="mt-4 space-y-2">
+              {data.importantDocuments.length ? (
+                data.importantDocuments.map((item) => (
+                  <Link
+                    className="block rounded-2xl bg-sand-50/80 px-4 py-3 transition hover:bg-white hover:shadow-[0_10px_18px_rgba(29,28,23,0.06)]"
+                    key={item.id}
+                    to={`/documents/${item.id}`}
+                  >
+                    <div className="font-medium text-ink-900">{item.title}</div>
+                    <div className="mt-1 text-sm text-stone-500">
+                      {item.documentType.name}
+                      {item.contact?.name ? ` · ${item.contact.name}` : ""}
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p className="text-sm text-stone-500">Er zijn nog geen belangrijke documenten gemarkeerd.</p>
+              )}
             </div>
           </div>
         </div>

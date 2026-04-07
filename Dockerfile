@@ -35,6 +35,7 @@ COPY --from=build /app/server/package.json ./server/package.json
 COPY --from=build /app/prisma/bootstrap.sql /opt/domus/bootstrap.sql
 COPY --from=build /app/prisma/migrate_v6.sql /opt/domus/migrate_v6.sql
 COPY --from=build /app/prisma/migrate_v7.sql /opt/domus/migrate_v7.sql
+COPY --from=build /app/prisma/migrate_v8.sql /opt/domus/migrate_v8.sql
 COPY --from=build /app/prisma/seed.ts ./prisma-seed/seed.ts
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 

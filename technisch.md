@@ -229,7 +229,7 @@ Belangrijke routegroepen:
 
 [dashboard.ts](c:/Projects/Domus/server/src/routes/dashboard.ts)
 
-Levert aggregaties, signalen, kostenanalyse, datakwaliteitsinformatie en importqueuegegevens.
+Levert aggregaties, signalen, kostenanalyse, datakwaliteitsinformatie, belangrijke documenten en importqueuegegevens.
 
 ### Documents
 
@@ -242,6 +242,7 @@ Ondersteunt:
 - upload
 - update
 - versiebeheer
+- markering van belangrijke documenten
 - soft delete
 - permanent delete
 - preview

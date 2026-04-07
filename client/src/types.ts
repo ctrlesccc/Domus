@@ -62,6 +62,7 @@ export type DocumentItem = {
   contactId?: number | null;
   expiryDate?: string | null;
   documentDate?: string | null;
+  isImportant: boolean;
   status: "ACTIVE" | "EXPIRED" | "ARCHIVED";
   notes?: string | null;
   dossierTopic: string;
@@ -127,6 +128,7 @@ export type DashboardData = {
   };
   documentsExpiringSoon: DocumentItem[];
   obligationsEndingSoon: Obligation[];
+  importantDocuments: DocumentItem[];
   upcomingPlannedCharges: (Obligation & { plannedDate: string })[];
   planningWindowDays: number;
   dossierOptions: string[];

@@ -32,4 +32,9 @@ if ! sqlite3 "$DB_PATH" "SELECT plannedChargeDay FROM obligations LIMIT 1;" >/de
   sqlite3 "$DB_PATH" < /opt/domus/migrate_v7.sql
 fi
 
+if ! sqlite3 "$DB_PATH" "SELECT isImportant FROM documents LIMIT 1;" >/dev/null 2>&1; then
+  echo "Applying DOMUS important-documents migration..."
+  sqlite3 "$DB_PATH" < /opt/domus/migrate_v8.sql
+fi
+
 exec "$@"

@@ -4,12 +4,12 @@ const modules = [
   {
     title: "Dashboard",
     description:
-      "Het dashboard bundelt signalen, komende afschrijvingen, kostenverdeling, importwachtrij en datakwaliteit in één werkoverzicht. Je ziet direct welke documenten of verplichtingen aandacht nodig hebben.",
+      "Het dashboard bundelt signalen, belangrijke documenten, komende afschrijvingen, kostenverdeling, importwachtrij en datakwaliteit in één werkoverzicht. Je ziet direct welke documenten of verplichtingen aandacht nodig hebben.",
   },
   {
     title: "Documenten",
     description:
-      "Beheer documenten met preview, versiebeheer, gekoppelde contacten, verplichtingen, dossierindeling, statusbewaking en snelle filtering. Nieuwe versies blijven netjes gegroepeerd.",
+      "Beheer documenten met preview, versiebeheer, gekoppelde contacten, verplichtingen, dossierindeling, statusbewaking, belangrijke markering en snelle filtering. Nieuwe versies blijven netjes gegroepeerd.",
   },
   {
     title: "Contacten",
@@ -54,6 +54,7 @@ const importFlow = [
 const dashboardHighlights = [
   "Statistiekkaarten voor documenten, contacten, verplichtingen, importqueue en kosten.",
   "Documenten die bijna verlopen en verplichtingen die binnenkort aflopen.",
+  "Blok met belangrijke documenten voor snelle toegang tot kritieke bestanden.",
   "Komende afschrijvingen van de komende 30 dagen op basis van maand en dag.",
   "Kosten per maand per type met klikbare legenda om onderliggende verplichtingen uit te klappen.",
   "Datakwaliteitsblokken voor ontbrekende documentdata of verplichtingen zonder bedrag.",
@@ -62,6 +63,7 @@ const dashboardHighlights = [
 const practicalTips = [
   "Gebruik dossiers consequent en sleep items in de dossierweergave direct naar het juiste onderwerp als iets verkeerd staat.",
   "Vul documentdatum, vervaldatum, reviewdatum en geboortedata zoveel mogelijk in. De planning wordt daardoor waardevoller.",
+  "Markeer echt kritieke documenten als belangrijk zodat ze op het dashboard apart zichtbaar blijven.",
   "Vul bij verplichtingen ook betaalwijze en geplande afschrijvingsdatum in. Het dashboard wordt daardoor bruikbaarder.",
   "Koppel documenten aan contacten en verplichtingen. Zo ontstaat een bruikbaar netwerk tussen bestanden, partijen en kosten.",
   "Gebruik de importqueue als intakeplek en niet als eindstation. Werk concepten zo snel mogelijk af voor een schoon systeem.",

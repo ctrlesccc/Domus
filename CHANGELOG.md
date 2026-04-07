@@ -2,6 +2,17 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.7.0] - 2026-04-07
+
+### Added
+- Documenten kunnen nu als belangrijk worden gemarkeerd via een checkbox in de documenteditor.
+- Dashboardblok toegevoegd met belangrijke documenten naast het blok `Datakwaliteit`.
+
+### Changed
+- Documentlijsten tonen nu duidelijk welke documenten als belangrijk zijn gemarkeerd.
+- SQLite bootstrap, upgradepad en Docker-startup uitgebreid met migratie `v8` voor belangrijke documenten.
+- README, helptekst en ontwerpdocumentatie bijgewerkt op de nieuwe documentmarkering en dashboardweergave.
+
 ## [1.6.0] - 2026-04-07
 
 ### Changed

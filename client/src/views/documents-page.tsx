@@ -157,6 +157,11 @@ export function DocumentsPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="truncate text-[1rem] font-semibold tracking-tight text-ink-900">{item.title}</span>
+                          {item.isImportant ? (
+                            <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+                              Belangrijk
+                            </span>
+                          ) : null}
                           <span
                             className={[
                               "rounded-full px-2.5 py-1 text-[11px] font-semibold",

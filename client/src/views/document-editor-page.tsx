@@ -12,6 +12,7 @@ type FormState = {
   contactIds: string[];
   expiryDate: string;
   documentDate: string;
+  isImportant: boolean;
   status: "ACTIVE" | "EXPIRED" | "ARCHIVED";
   notes: string;
   dossierTopic: string;
@@ -26,6 +27,7 @@ const emptyState: FormState = {
   contactIds: [],
   expiryDate: "",
   documentDate: "",
+  isImportant: false,
   status: "ACTIVE",
   notes: "",
   dossierTopic: "",
@@ -78,6 +80,7 @@ export function DocumentEditorPage() {
           contactIds: item.linkedContacts.map((contact) => String(contact.id)),
           expiryDate: item.expiryDate ? item.expiryDate.slice(0, 10) : "",
           documentDate: item.documentDate ? item.documentDate.slice(0, 10) : "",
+          isImportant: item.isImportant,
           status: item.status,
           notes: item.notes ?? "",
           dossierTopic: item.dossierTopic,
@@ -117,6 +120,7 @@ export function DocumentEditorPage() {
       payload.set("contactIds", form.contactIds.join(","));
       if (form.expiryDate) payload.set("expiryDate", form.expiryDate);
       if (form.documentDate) payload.set("documentDate", form.documentDate);
+      payload.set("isImportant", String(form.isImportant));
       payload.set("status", form.status);
       payload.set("notes", form.notes);
       payload.set("dossierTopic", form.dossierTopic);
@@ -221,6 +225,15 @@ export function DocumentEditorPage() {
             <input className="app-input" type="date" value={form.documentDate} onChange={(event) => setForm({ ...form, documentDate: event.target.value })} />
           </div>
         </div>
+
+        <label className="flex items-center gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm text-stone-700">
+          <input
+            checked={form.isImportant}
+            onChange={(event) => setForm({ ...form, isImportant: event.target.checked })}
+            type="checkbox"
+          />
+          Markeer dit document als belangrijk
+        </label>
 
         <div>
           <label className="mb-2 block text-sm font-medium text-stone-700">

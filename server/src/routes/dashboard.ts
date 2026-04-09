@@ -60,9 +60,28 @@ function normalizeDashboardWindowDays(value: string | null | undefined) {
   return Math.min(365, Math.max(1, Math.round(parsed)));
 }
 
+dashboardRouter.get("/navigation-counts", async (_request, response) => {
+  const [dossierOptions, documentCount, contactCount, personalContactCount, obligationCount, importQueueCount] = await Promise.all([
+    getOptionList("options.dossiers", []),
+    prisma.document.count({ where: { deletedAt: null, isLatestVersion: true } }),
+    prisma.contact.count({ where: { kind: "BUSINESS", deletedAt: null } }),
+    prisma.contact.count({ where: { kind: "PERSONAL", deletedAt: null } }),
+    prisma.obligation.count({ where: { deletedAt: null } }),
+    prisma.importDocument.count({ where: { status: ImportStatus.PENDING } }),
+  ]);
+
+  return response.json({
+    dossierCount: dossierOptions.length,
+    documentCount,
+    contactCount,
+    personalContactCount,
+    obligationCount,
+    importQueueCount,
+  });
+});
+
 dashboardRouter.get("/", async (_request, response) => {
   const today = new Date();
-  const year = today.getFullYear();
   const [dossierOptions, planningWindowSetting] = await Promise.all([
     getOptionList("options.dossiers", []),
     prisma.appSetting.findUnique({ where: { key: "dashboard.expiryWindowDays" } }),

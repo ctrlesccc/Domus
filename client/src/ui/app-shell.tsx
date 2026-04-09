@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { api } from "../lib/api";
+import { DOMUS_DATA_CHANGED_EVENT, api } from "../lib/api";
 import { useAuth } from "../state/auth";
 
 const navigation = [
@@ -30,19 +30,42 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    api
-      .dashboard()
-      .then((data) =>
+    let cancelled = false;
+
+    const loadCounts = async () => {
+      try {
+        const data = await api.navigationCounts();
+        if (cancelled) {
+          return;
+        }
+
         setCounts({
-          "/dossiers": data.dossierOptions.length,
-          "/documents": data.stats.documentCount,
-          "/contacts": data.stats.contactCount,
-          "/personal-contacts": data.stats.personalContactCount,
-          "/obligations": data.stats.obligationCount,
-        }),
-      )
-      .catch(() => setCounts({}));
-  }, []);
+          "/dossiers": data.dossierCount,
+          "/documents": data.documentCount,
+          "/contacts": data.contactCount,
+          "/personal-contacts": data.personalContactCount,
+          "/obligations": data.obligationCount,
+          "/imports": data.importQueueCount,
+        });
+      } catch {
+        if (!cancelled) {
+          setCounts({});
+        }
+      }
+    };
+
+    loadCounts().catch(() => undefined);
+    const onDataChanged = () => {
+      loadCounts().catch(() => undefined);
+    };
+
+    window.addEventListener(DOMUS_DATA_CHANGED_EVENT, onDataChanged);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(DOMUS_DATA_CHANGED_EVENT, onDataChanged);
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);

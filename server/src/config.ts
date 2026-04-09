@@ -12,6 +12,7 @@ export const config = {
   port: parseNumber(process.env.PORT, 4000),
   clientUrl: process.env.CLIENT_URL ?? "http://localhost:5173",
   jwtSecret: process.env.JWT_SECRET ?? "change-me",
+  isProduction: (process.env.NODE_ENV ?? "").toLowerCase() === "production",
   maxUploadSizeMb: parseNumber(process.env.MAX_UPLOAD_SIZE_MB, 15),
   storageRoot: path.resolve(process.cwd(), "..", "storage", "documents"),
   importRoot: path.resolve(process.cwd(), "..", "storage", "import"),

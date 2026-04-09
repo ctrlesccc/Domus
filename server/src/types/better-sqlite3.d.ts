@@ -9,6 +9,7 @@ declare module "better-sqlite3" {
   interface Database {
     prepare(sql: string): Statement;
     exec(sql: string): this;
+    pragma(source: string): unknown;
     close(): void;
   }
 

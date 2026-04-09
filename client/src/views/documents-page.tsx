@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
 import { referenceOptions, sortByLabel } from "../lib/options";
+import { useDebouncedValue } from "../lib/use-debounced-value";
 import type { Contact, DocumentItem, ReferenceItem } from "../types";
 import { EmptyState } from "../ui/empty-state";
 import { PageHeader } from "../ui/page-header";
@@ -26,22 +27,44 @@ export function DocumentsPage() {
     latestOnly: true,
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const debouncedQuery = useDebouncedValue(filters.q, 250);
 
   useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+
     Promise.all([
       api.documents(
-        `?q=${encodeURIComponent(filters.q)}&documentTypeId=${filters.documentTypeId}&contactId=${filters.contactId}&status=${filters.status}&latestOnly=${filters.latestOnly}`,
+        `?q=${encodeURIComponent(debouncedQuery)}&documentTypeId=${filters.documentTypeId}&contactId=${filters.contactId}&status=${filters.status}&latestOnly=${filters.latestOnly}`,
       ),
       api.documentTypes(),
       api.contacts("?kind=BUSINESS"),
     ])
       .then(([documents, fetchedDocumentTypes, fetchedContacts]) => {
+        if (cancelled) {
+          return;
+        }
         setItems(documents);
         setDocumentTypes(referenceOptions(fetchedDocumentTypes));
         setContacts(sortByLabel(fetchedContacts, (item) => item.name));
+        setError("");
       })
-      .catch((loadError) => setError(loadError.message));
-  }, [filters]);
+      .catch((loadError) => {
+        if (!cancelled) {
+          setError(loadError.message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery, filters.contactId, filters.documentTypeId, filters.latestOnly, filters.status]);
 
   useEffect(() => {
     if (!items.length) {
@@ -126,7 +149,7 @@ export function DocumentsPage() {
             <div>
               <h3 className="text-base font-semibold tracking-tight text-ink-900">Documentlijst</h3>
               <p className="mt-1 text-sm text-stone-500">
-                {items.length} resultaten{selectedDocument ? "" : " · selecteer een document voor preview"}
+                {isLoading ? "Documenten laden..." : `${items.length} resultaten${selectedDocument ? "" : " · selecteer een document voor preview"}`}
               </p>
             </div>
             {selectedDocument ? (
@@ -136,7 +159,17 @@ export function DocumentsPage() {
             ) : null}
           </div>
 
-          {items.length ? (
+          {isLoading ? (
+            <div className="mt-4 space-y-2">
+              {[0, 1, 2].map((placeholder) => (
+                <div className="rounded-[1.35rem] bg-white/55 px-4 py-4" key={placeholder}>
+                  <div className="h-4 w-2/5 rounded-full bg-stone-200" />
+                  <div className="mt-3 h-3 w-3/4 rounded-full bg-stone-100" />
+                  <div className="mt-2 h-3 w-1/2 rounded-full bg-stone-100" />
+                </div>
+              ))}
+            </div>
+          ) : items.length ? (
             <div className="mt-4 space-y-2">
               {items.map((item) => {
                 const isSelected = item.id === selectedDocument?.id;
@@ -156,7 +189,7 @@ export function DocumentsPage() {
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="truncate text-[1rem] font-semibold tracking-tight text-ink-900">{item.title}</span>
+                          <span className="truncate text-[1.02rem] font-semibold tracking-tight text-ink-900">{item.title}</span>
                           {item.isImportant ? (
                             <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
                               Belangrijk
@@ -175,10 +208,13 @@ export function DocumentsPage() {
                             {statusLabel[item.status]}
                           </span>
                         </div>
-                        <div className="mt-1 text-sm text-stone-600">
-                          {item.documentType.name} · v{item.versionInfo.versionNumber} · {item.originalFilename}
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-600">
+                          <span className="rounded-full bg-sand-50 px-2.5 py-1 font-medium">{item.documentType.name}</span>
+                          <span className="rounded-full bg-sand-50 px-2.5 py-1 font-medium">v{item.versionInfo.versionNumber}</span>
+                          <span className="rounded-full bg-sand-50 px-2.5 py-1 font-medium">{formatFileSize(item.fileSize)}</span>
                         </div>
-                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-500">
+                        <div className="mt-2 text-sm text-stone-600">{item.originalFilename}</div>
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-500">
                           <span>
                             Contact:{" "}
                             {item.linkedContacts.length
@@ -186,7 +222,6 @@ export function DocumentsPage() {
                               : item.contact?.name ?? "Niet gekoppeld"}
                           </span>
                           <span>Vervalt: {formatDate(item.expiryDate)}</span>
-                          <span>{formatFileSize(item.fileSize)}</span>
                         </div>
                       </div>
 
@@ -212,8 +247,12 @@ export function DocumentsPage() {
           ) : (
             <div className="mt-5">
               <EmptyState
-                title="Nog geen documenten"
-                description="Upload PDF's, afbeeldingen en Office-bestanden om contracten, garanties en administratie centraal te beheren."
+                title={filters.q || filters.contactId || filters.documentTypeId || filters.status ? "Geen documenten gevonden" : "Nog geen documenten"}
+                description={
+                  filters.q || filters.contactId || filters.documentTypeId || filters.status
+                    ? "Probeer je zoekterm of filters te verruimen om meer documenten te tonen."
+                    : "Upload PDF's, afbeeldingen en Office-bestanden om contracten, garanties en administratie centraal te beheren."
+                }
               />
             </div>
           )}
@@ -242,7 +281,7 @@ export function DocumentsPage() {
               <DocumentPreview item={selectedDocument} />
             ) : (
               <div className="flex flex-1 items-center justify-center px-8 text-center text-sm text-stone-500">
-                Selecteer een document om de preview te laden.
+                {isLoading ? "Preview wordt voorbereid..." : "Selecteer een document om de preview te laden."}
               </div>
             )}
           </div>

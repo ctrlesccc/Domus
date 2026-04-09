@@ -1,15 +1,31 @@
 import { Router } from "express";
+import Database from "better-sqlite3";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { config } from "../config.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 
 export const backupsRouter = Router();
 
-backupsRouter.use(requireAuth);
+backupsRouter.use(requireAuth, requireAdmin);
 
 async function ensureBackupsRoot() {
   await fs.mkdir(config.backupsRoot, { recursive: true });
+}
+
+function displayPath(absolutePath: string) {
+  return path.relative(path.resolve(process.cwd(), ".."), absolutePath).replace(/\\/g, "/") || ".";
+}
+
+async function createDatabaseBackup(targetDatabasePath: string) {
+  const database = new Database(config.databasePath);
+  try {
+    const escapedTarget = targetDatabasePath.replace(/'/g, "''");
+    database.pragma("wal_checkpoint(FULL)");
+    database.exec(`VACUUM INTO '${escapedTarget}'`);
+  } finally {
+    database.close();
+  }
 }
 
 async function folderSize(targetPath: string): Promise<number> {
@@ -44,7 +60,7 @@ backupsRouter.get("/", async (_request, response) => {
         const size = await folderSize(fullPath);
         return {
           name: entry.name,
-          path: fullPath,
+          path: displayPath(fullPath),
           createdAt: stats.birthtime.toISOString(),
           size,
         };
@@ -55,9 +71,9 @@ backupsRouter.get("/", async (_request, response) => {
 
   return response.json({
     overview: {
-      databasePath: config.databasePath,
+      databasePath: displayPath(config.databasePath),
       databaseLastModified: dbStats?.mtime.toISOString() ?? null,
-      storageRoot: config.storageRoot,
+      storageRoot: displayPath(config.storageRoot),
       storageSize,
     },
     backups,
@@ -72,11 +88,11 @@ backupsRouter.post("/", async (_request, response) => {
   const targetDatabase = path.join(targetDir, "dev.db");
 
   await fs.mkdir(targetDir, { recursive: true });
-  await fs.copyFile(config.databasePath, targetDatabase);
+  await createDatabaseBackup(targetDatabase);
   await fs.cp(path.resolve(config.storageRoot, ".."), targetStorage, { recursive: true });
 
   return response.status(201).json({
     name: path.basename(targetDir),
-    path: targetDir,
+    path: displayPath(targetDir),
   });
 });

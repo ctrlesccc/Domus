@@ -3,11 +3,11 @@ import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { defaultDossierOptions, defaultPaymentMethodOptions } from "../lib/app-options.js";
 import { prisma } from "../lib/prisma.js";
 import { settingsSchema } from "../lib/validators.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 
 export const settingsRouter = Router();
 
-settingsRouter.use(requireAuth);
+settingsRouter.use(requireAuth, requireAdmin);
 
 settingsRouter.get("/", async (_request, response) => {
   const items = await prisma.appSetting.findMany({ orderBy: { key: "asc" } });

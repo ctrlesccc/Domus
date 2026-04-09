@@ -1,4 +1,6 @@
-import type { AppSetting, AuditEntry, BackupOverview, Contact, DashboardData, DossierOverview, DocumentItem, ImportItem, ManagedUser, Obligation, PlanningOverview, ReferenceItem, SearchResults, TrashOverview, User } from "../types";
+import type { AppSetting, AuditEntry, BackupOverview, Contact, DashboardData, DossierOverview, DocumentItem, ImportItem, ManagedUser, NavigationCounts, Obligation, PlanningOverview, ReferenceItem, SearchResults, TrashOverview, User } from "../types";
+
+export const DOMUS_DATA_CHANGED_EVENT = "domus:data-changed";
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -16,10 +18,19 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   }
 
   if (response.status === 204) {
+    if ((init?.method ?? "GET").toUpperCase() !== "GET" && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(DOMUS_DATA_CHANGED_EVENT));
+    }
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  const payload = (await response.json()) as T;
+
+  if ((init?.method ?? "GET").toUpperCase() !== "GET" && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(DOMUS_DATA_CHANGED_EVENT));
+  }
+
+  return payload;
 }
 
 export const api = {
@@ -30,6 +41,7 @@ export const api = {
   changePassword: (payload: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
     request<{ success: true }>("/api/auth/change-password", { method: "POST", body: JSON.stringify(payload) }),
   dashboard: () => request<DashboardData>("/api/dashboard"),
+  navigationCounts: () => request<NavigationCounts>("/api/dashboard/navigation-counts"),
   search: (q: string) => request<SearchResults>(`/api/search?q=${encodeURIComponent(q)}`),
   planning: () => request<PlanningOverview>("/api/planning"),
   dossiers: () => request<DossierOverview>("/api/dossiers"),

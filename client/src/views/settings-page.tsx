@@ -11,6 +11,7 @@ type DensityMode = "comfortable" | "compact";
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const [activeSection, setActiveSection] = useState<Section>("account");
   const [contactTypes, setContactTypes] = useState<ReferenceItem[]>([]);
   const [documentTypes, setDocumentTypes] = useState<ReferenceItem[]>([]);
@@ -51,7 +52,13 @@ export function SettingsPage() {
 
   useEffect(() => {
     load().catch((loadError) => setError(loadError.message));
-  }, [user?.role]);
+  }, [isAdmin, user?.role]);
+
+  useEffect(() => {
+    if (!isAdmin && activeSection !== "account" && activeSection !== "trash") {
+      setActiveSection("account");
+    }
+  }, [activeSection, isAdmin]);
 
   useEffect(() => {
     document.documentElement.dataset.density = density;
@@ -72,12 +79,12 @@ export function SettingsPage() {
         <div className="app-card p-4">
           {[
             ["account", "Mijn account"],
-            ...(user?.role === "ADMIN" ? [["users", "Gebruikers"]] : []),
-            ["contactTypes", "Contactsoorten"],
-            ["documentTypes", "Documentsoorten"],
-            ["obligationTypes", "Verplichtingstypen"],
-            ["settings", "App-instellingen"],
-            ["backups", "Back-ups"],
+            ...(isAdmin ? [["users", "Gebruikers"]] : []),
+            ...(isAdmin ? [["contactTypes", "Contactsoorten"]] : []),
+            ...(isAdmin ? [["documentTypes", "Documentsoorten"]] : []),
+            ...(isAdmin ? [["obligationTypes", "Verplichtingstypen"]] : []),
+            ...(isAdmin ? [["settings", "App-instellingen"]] : []),
+            ...(isAdmin ? [["backups", "Back-ups"]] : []),
             ["trash", "Prullenbak"],
           ].map(([value, label]) => (
             <button
@@ -101,7 +108,7 @@ export function SettingsPage() {
             <AccountPanel />
           ) : null}
 
-          {activeSection === "users" && user?.role === "ADMIN" ? (
+          {activeSection === "users" && isAdmin ? (
             <UserManagementPanel
               currentUserId={user.userId}
               users={users}
@@ -119,7 +126,7 @@ export function SettingsPage() {
             />
           ) : null}
 
-          {activeSection === "contactTypes" ? (
+          {activeSection === "contactTypes" && isAdmin ? (
             <ReferenceEditor
               categoryEnabled
               items={contactTypes}
@@ -139,7 +146,7 @@ export function SettingsPage() {
             />
           ) : null}
 
-          {activeSection === "documentTypes" ? (
+          {activeSection === "documentTypes" && isAdmin ? (
             <ReferenceEditor
               items={documentTypes}
               onCreate={async (payload) => {
@@ -158,7 +165,7 @@ export function SettingsPage() {
             />
           ) : null}
 
-          {activeSection === "obligationTypes" ? (
+          {activeSection === "obligationTypes" && isAdmin ? (
             <ReferenceEditor
               items={obligationTypes}
               onCreate={async (payload) => {
@@ -177,7 +184,7 @@ export function SettingsPage() {
             />
           ) : null}
 
-          {activeSection === "settings" ? (
+          {activeSection === "settings" && isAdmin ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-ink-900">App-instellingen</h3>
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
@@ -242,7 +249,7 @@ export function SettingsPage() {
             </div>
           ) : null}
 
-          {activeSection === "backups" && backups ? (
+          {activeSection === "backups" && backups && isAdmin ? (
             <BackupPanel
               backups={backups}
               onCreate={async () => {

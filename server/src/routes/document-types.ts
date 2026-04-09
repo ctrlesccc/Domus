@@ -2,11 +2,11 @@ import { Router } from "express";
 import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
 import { prisma } from "../lib/prisma.js";
 import { referenceSchema } from "../lib/validators.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 
 export const documentTypesRouter = Router();
 
-documentTypesRouter.use(requireAuth);
+documentTypesRouter.use(requireAuth, requireAdmin);
 
 documentTypesRouter.get("/", async (_request, response) => {
   const items = await prisma.documentType.findMany({

@@ -23,7 +23,7 @@ export function setAuthCookie(response: Response, token: string) {
   response.cookie(cookieName, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: config.isProduction,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }

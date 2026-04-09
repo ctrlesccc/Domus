@@ -184,6 +184,15 @@ export type DashboardData = {
   importQueue: ImportItem[];
 };
 
+export type NavigationCounts = {
+  dossierCount: number;
+  documentCount: number;
+  contactCount: number;
+  personalContactCount: number;
+  obligationCount: number;
+  importQueueCount: number;
+};
+
 export type BackupOverview = {
   overview: {
     databasePath: string;

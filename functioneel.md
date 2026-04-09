@@ -174,6 +174,7 @@ Een reguliere gebruiker kan:
 - auditinformatie inzien voor zover de pagina beschikbaar is
 
 Gebruikersbeheer is voorbehouden aan beheerders.
+Ook instellingenbeheer, referentietabellen en back-upbeheer zijn voorbehouden aan beheerders.
 
 ## 6. Hoofdmodules
 
@@ -284,6 +285,7 @@ De zoekmodule biedt een centrale zoekfunctie over:
 Doel:
 
 - snel terugvinden van relevante informatie zonder door meerdere modules te hoeven navigeren
+- direct kunnen doorklikken naar gevonden documenten, contacten en verplichtingen
 
 ### 6.8 Jaarplanning
 
@@ -459,6 +461,7 @@ DOMUS is ontworpen als rustige beheeromgeving met:
 - mobiele hamburgernavigatie
 - compacte of comfortabele weergavedichtheid
 - inline previews waar relevant
+- zoek- en filtervelden met rustiger gedrag door vertraagde zoekopdrachten en zichtbare laadstatussen
 
 De app wil vooral praktisch, betrouwbaar en overzichtelijk zijn.
 

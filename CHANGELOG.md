@@ -2,6 +2,15 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [5.6.1] - 2026-04-09
+
+### Changed
+- Applicatieversie bijgewerkt naar `5.6.1`.
+- Beheerfuncties voor instellingen, referentietabellen en back-ups nu strikter afgeschermd voor beheerders.
+- Zoek- en documentlijsten verfijnd met debounce, laadstatussen en beter klikbaar/resultaatgericht gedrag.
+- Navigatietellers in de app-shell worden nu lichter opgehaald en actiever ververst na mutaties.
+- Back-upoverzicht toont geen absolute serverpaden meer en gebruikt een veiliger SQLite-backuppad.
+
 ## [5.6.0] - 2026-04-09
 
 ### Added

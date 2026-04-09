@@ -135,6 +135,7 @@ Eigenschappen:
 - JSON default headers
 - centrale foutafhandeling
 - typed responses via TypeScript
+- frontend-event voor het verversen van navigatietellers na mutaties
 
 ## 4.4 UI-ontwerp
 
@@ -203,6 +204,8 @@ Er zijn twee guards:
 - `requireAuth`
 - `requireAdmin`
 
+Beheer van gebruikers, instellingen, referentietabellen en back-ups gebruikt expliciet de admin-guard.
+
 ## 5.4 API-routes
 
 Belangrijke routegroepen:
@@ -230,6 +233,7 @@ Belangrijke routegroepen:
 [dashboard.ts](c:/Projects/Domus/server/src/routes/dashboard.ts)
 
 Levert aggregaties, signalen, kostenanalyse, datakwaliteitsinformatie, belangrijke documenten en importqueuegegevens.
+Daarnaast is er een lichtgewicht endpoint voor navigatietellers, zodat de app-shell niet steeds het volledige dashboard hoeft op te halen.
 
 ### Documents
 
@@ -570,16 +574,11 @@ Technische beveiligingsmaatregelen:
 
 - JWT in HTTP-only cookies
 - server-side route guards
-- admin guard op gebruikersbeheer
+- admin guard op gebruikersbeheer, instellingen, referentiebeheer en back-ups
 - rate limiting op login
 - soft delete in plaats van hard delete als standaardpad
 - auditregistratie
-
-Bekende beperking:
-
-- cookie `secure` staat momenteel niet dynamisch aan bij HTTPS reverse proxy deployments
-
-Dat kan later verder gehard worden.
+- productie-cookies met `secure` ingeschakeld
 
 ## 14. Performance en schaal
 
@@ -598,6 +597,7 @@ Beperkingen:
 - geen message queue voor importverwerking
 - geen aparte background worker
 - geen server-side pagination op alle lijsten
+- dashboard bevat nog steeds relatief rijke samengestelde queries, ondanks lichtere navigatietellers
 
 Voor de huidige doelgroep zijn dit acceptabele ontwerpkeuzes.
 

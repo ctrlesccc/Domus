@@ -128,6 +128,7 @@ Kenmerken van een importdocument:
 - zichtbaar in de importqueue
 - voorzien van OCR-resultaten en tekstextractie waar mogelijk
 - automatisch voorgestelde metadata
+- heranalyse mogelijk vanuit de intake
 - pas definitief na expliciete bevestiging door de gebruiker
 
 ### 4.6 Audititem
@@ -328,7 +329,7 @@ Proces:
 2. de applicatie detecteert het bestand
 3. DOMUS maakt een draft-item in de importqueue
 4. OCR en tekstanalyse proberen metadata te herkennen
-5. de gebruiker beoordeelt preview, confidence en waarschuwingen
+5. de gebruiker beoordeelt preview, confidence, verklarende signalen en waarschuwingen
 6. de gebruiker vult ontbrekende gegevens aan
 7. na akkoord wordt het bestand verplaatst naar de documentopslag en als document opgenomen
 
@@ -438,7 +439,7 @@ Dit proces is gericht op minimale handmatige invoer:
 1. bestand wordt buiten de app geplaatst
 2. DOMUS herkent en registreert het bestand als draft
 3. OCR en patroonherkenning vullen zoveel mogelijk metadata vooraf in
-4. gebruiker controleert en verrijkt de gegevens
+4. gebruiker ziet live wanneer analyse nog bezig is, kan heranalyse starten en controleert daarna de voorgestelde velden
 5. gebruiker finaliseert de intake
 
 ### 7.3 Doorlopende bewaking
@@ -462,6 +463,7 @@ DOMUS is ontworpen als rustige beheeromgeving met:
 - compacte of comfortabele weergavedichtheid
 - inline previews waar relevant
 - zoek- en filtervelden met rustiger gedrag door vertraagde zoekopdrachten en zichtbare laadstatussen
+- intake met live OCR-status, verklarende suggesties en duidelijkere visuele statuskaarten
 
 De app wil vooral praktisch, betrouwbaar en overzichtelijk zijn.
 

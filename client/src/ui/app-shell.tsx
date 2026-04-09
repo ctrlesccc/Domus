@@ -18,7 +18,7 @@ const navigation = [
   { to: "/settings", label: "Instellingen" },
 ];
 
-const appVersion = "v5.6.1";
+const appVersion = "v1.6.2";
 
 type NavigationCounts = Partial<Record<(typeof navigation)[number]["to"], number>>;
 

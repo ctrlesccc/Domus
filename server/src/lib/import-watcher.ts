@@ -2,12 +2,61 @@ import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { ImportStatus, OcrStatus } from "@prisma/client";
-import { prisma } from "./prisma.js";
 import { config } from "../config.js";
-import { ensureStorageDirectory, inferMimeTypeFromFilename, isMimeTypeAllowed } from "./storage.js";
 import { analyzeImportDocument } from "./import-analysis.js";
+import { prisma } from "./prisma.js";
+import { ensureStorageDirectory, inferMimeTypeFromFilename, isMimeTypeAllowed } from "./storage.js";
 
 let watcherStarted = false;
+let queueRunning = false;
+const queuedAnalyses = new Map<number, { id: number; sourcePath: string; mimeType: string; originalFilename: string }>();
+
+async function processAnalysisQueue() {
+  if (queueRunning) {
+    return;
+  }
+
+  queueRunning = true;
+  try {
+    while (queuedAnalyses.size) {
+      const next = queuedAnalyses.values().next().value;
+      if (!next) {
+        break;
+      }
+
+      queuedAnalyses.delete(next.id);
+      await analyzeImportDocument(next);
+    }
+  } finally {
+    queueRunning = false;
+  }
+}
+
+export function queueImportAnalysis(input: { id: number; sourcePath: string; mimeType: string; originalFilename: string }) {
+  queuedAnalyses.set(input.id, input);
+  void processAnalysisQueue();
+}
+
+export async function resetAndQueueImportAnalysis(input: { id: number; sourcePath: string; mimeType: string; originalFilename: string }) {
+  await prisma.importDocument.update({
+    where: { id: input.id },
+    data: {
+      ocrStatus: isMimeTypeAllowed(input.mimeType) ? OcrStatus.PENDING : OcrStatus.UNSUPPORTED,
+      errorMessage: null,
+      ocrText: null,
+      draftTitle: null,
+      draftDocumentTypeId: null,
+      draftContactId: null,
+      draftDocumentDate: null,
+      draftExpiryDate: null,
+      draftNotes: null,
+    },
+  });
+
+  if (isMimeTypeAllowed(input.mimeType)) {
+    queueImportAnalysis(input);
+  }
+}
 
 async function upsertImportFile(filePath: string) {
   const stats = await fsPromises.stat(filePath).catch(() => null);
@@ -17,31 +66,70 @@ async function upsertImportFile(filePath: string) {
 
   const originalFilename = path.basename(filePath);
   const mimeType = inferMimeTypeFromFilename(originalFilename);
+  const supported = isMimeTypeAllowed(mimeType);
+  const existing = await prisma.importDocument.findUnique({ where: { sourcePath: filePath } });
 
-  const item = await prisma.importDocument.upsert({
-    where: { sourcePath: filePath },
-    update: {
+  if (!existing) {
+    const created = await prisma.importDocument.create({
+      data: {
+        originalFilename,
+        sourcePath: filePath,
+        mimeType,
+        fileSize: stats.size,
+        status: supported ? ImportStatus.PENDING : ImportStatus.ERROR,
+        ocrStatus: supported ? OcrStatus.PENDING : OcrStatus.UNSUPPORTED,
+        errorMessage: supported ? null : "Niet ondersteund bestandstype.",
+      },
+    });
+
+    if (supported) {
+      queueImportAnalysis({
+        id: created.id,
+        sourcePath: filePath,
+        mimeType,
+        originalFilename,
+      });
+    }
+    return;
+  }
+
+  const fileChanged = existing.fileSize !== stats.size || existing.mimeType !== mimeType || existing.originalFilename !== originalFilename;
+  const needsSupportReset = !supported && existing.ocrStatus !== OcrStatus.UNSUPPORTED;
+
+  if (!fileChanged && !needsSupportReset) {
+    if (supported && existing.ocrStatus === OcrStatus.PENDING) {
+      queueImportAnalysis({
+        id: existing.id,
+        sourcePath: filePath,
+        mimeType,
+        originalFilename,
+      });
+    }
+    return;
+  }
+
+  await prisma.importDocument.update({
+    where: { id: existing.id },
+    data: {
       originalFilename,
       mimeType,
       fileSize: stats.size,
-      status: isMimeTypeAllowed(mimeType) ? ImportStatus.PENDING : ImportStatus.ERROR,
-      ocrStatus: isMimeTypeAllowed(mimeType) ? OcrStatus.PENDING : OcrStatus.UNSUPPORTED,
-      errorMessage: isMimeTypeAllowed(mimeType) ? null : "Niet ondersteund bestandstype.",
-    },
-    create: {
-      originalFilename,
-      sourcePath: filePath,
-      mimeType,
-      fileSize: stats.size,
-      status: isMimeTypeAllowed(mimeType) ? ImportStatus.PENDING : ImportStatus.ERROR,
-      ocrStatus: isMimeTypeAllowed(mimeType) ? OcrStatus.PENDING : OcrStatus.UNSUPPORTED,
-      errorMessage: isMimeTypeAllowed(mimeType) ? null : "Niet ondersteund bestandstype.",
+      status: supported ? ImportStatus.PENDING : ImportStatus.ERROR,
+      ocrStatus: supported ? OcrStatus.PENDING : OcrStatus.UNSUPPORTED,
+      errorMessage: supported ? null : "Niet ondersteund bestandstype.",
+      ocrText: supported ? null : existing.ocrText,
+      draftTitle: supported ? null : existing.draftTitle,
+      draftDocumentTypeId: supported ? null : existing.draftDocumentTypeId,
+      draftContactId: supported ? null : existing.draftContactId,
+      draftDocumentDate: supported ? null : existing.draftDocumentDate,
+      draftExpiryDate: supported ? null : existing.draftExpiryDate,
+      draftNotes: supported ? null : existing.draftNotes,
     },
   });
 
-  if (isMimeTypeAllowed(mimeType)) {
-    await analyzeImportDocument({
-      id: item.id,
+  if (supported) {
+    queueImportAnalysis({
+      id: existing.id,
       sourcePath: filePath,
       mimeType,
       originalFilename,

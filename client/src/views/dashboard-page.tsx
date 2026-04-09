@@ -43,6 +43,39 @@ export function DashboardPage() {
         action={{ label: "Nieuw document", to: "/documents/new" }}
       />
 
+      <section className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-[1.8rem] bg-pine-700 px-6 py-6 text-white shadow-[0_18px_42px_rgba(46,71,66,0.22)]">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/68">Focus vandaag</div>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight">Werk vanuit signalen in plaats van losse lijsten.</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">
+            Het dashboard bundelt import, vervaldatums, aflopende verplichtingen en kosten in een compact werkoverzicht.
+            Zo zie je meteen waar actie nodig is en waar de administratie nog aanvulling vraagt.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link className="app-button-secondary border-white/20 bg-white/10 text-white hover:bg-white/18 hover:text-white" to="/imports">
+              Open importqueue
+            </Link>
+            <Link className="app-button-secondary border-white/20 bg-white/10 text-white hover:bg-white/18 hover:text-white" to="/planning">
+              Bekijk planning
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          {[
+            ["Aandacht nu", data.documentsExpiringSoon.length + data.obligationsEndingSoon.length, "Documenten en verplichtingen vragen binnenkort actie."],
+            ["Datakwaliteit", data.missingData.documentsWithoutDate.length + data.missingData.obligationsWithoutAmount.length, "Ontbrekende gegevens vallen hier direct op."],
+            ["Import klaar", data.importQueue.filter((item) => item.ocrStatus !== "PENDING").length, "Items die je direct kunt nalopen en opnemen."],
+          ].map(([label, value, description]) => (
+            <div className="app-card px-5 py-5" key={label}>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">{value}</div>
+              <div className="mt-2 text-sm leading-6 text-stone-500">{description}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 2xl:grid-cols-8">
         {[
           ["Documenten", data.stats.documentCount],
@@ -95,12 +128,12 @@ export function DashboardPage() {
           <div className="mt-4 flex-1 space-y-3">
             {data.documentsExpiringSoon.length ? (
               data.documentsExpiringSoon.map((item) => (
-                <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
+                <Link className="block rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70 transition hover:bg-white" key={item.id} to={`/documents/${item.id}`}>
                   <div className="font-medium text-ink-900">{item.title}</div>
                   <div className="mt-1 text-sm text-stone-500">
                     {item.documentType.name} · {formatDate(item.expiryDate)}
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               <p className="text-sm text-stone-500">Geen documenten met een vervaldatum binnen 30 dagen.</p>
@@ -119,12 +152,12 @@ export function DashboardPage() {
           <div className="mt-4 flex-1 space-y-3">
             {data.obligationsEndingSoon.length ? (
               data.obligationsEndingSoon.map((item) => (
-                <div className="rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70" key={item.id}>
+                <Link className="block rounded-2xl bg-sand-50/80 px-4 py-3 ring-1 ring-white/70 transition hover:bg-white" key={item.id} to={`/obligations/${item.id}`}>
                   <div className="font-medium text-ink-900">{item.title}</div>
                   <div className="mt-1 text-sm text-stone-500">
                     {item.obligationType.name} · {formatDate(item.endDate)}
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               <p className="text-sm text-stone-500">Geen contracten die binnenkort aflopen.</p>

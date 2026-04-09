@@ -2,6 +2,8 @@
 
 DOMUS is a self-hosted household administration app for managing documents, contacts, personal contacts, obligations, dashboard signals, and reference data.
 
+Recent updates also improved the import intake: OCR now runs in a background queue, the import screen can trigger re-analysis, and the dashboard/import UI gives clearer live feedback while suggestions are being prepared.
+
 ## Stack
 
 - React + Vite + TypeScript
@@ -37,3 +39,4 @@ Uploaded files are stored in `storage/documents`.
 - In this environment, Prisma schema-engine commands such as `migrate dev` and `db push` can fail for SQLite, so the initial database bootstrap is handled with `sqlite3` via `prisma/bootstrap.sql`.
 - Existing Docker deployments apply bundled SQLite migration scripts during container startup when required.
 - Administrative endpoints for settings, backups and reference data are restricted to administrator accounts.
+- Import suggestions use asynchronous OCR/text extraction so uploads and folder scans stay responsive while the intake form is filled in progressively.

@@ -125,3 +125,17 @@ input[type="checkbox"] {
 .app-label {
   @apply mb-2 block text-[13px] font-medium text-stone-500;
 }
+
+@keyframes app-pulse-subtle {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(194, 154, 105, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(194, 154, 105, 0.14);
+  }
+}
+
+.app-pulse-subtle {
+  animation: app-pulse-subtle 2.2s ease-in-out infinite;
+}

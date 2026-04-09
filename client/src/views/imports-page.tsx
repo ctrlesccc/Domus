@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
 import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
-import type { AppSetting, Contact, DocumentItem, ImportItem, Obligation, ReferenceItem } from "../types";
+import type { AppSetting, Contact, ImportItem, Obligation, ReferenceItem } from "../types";
 import { PageHeader } from "../ui/page-header";
 
 const emptyForm = {
@@ -19,6 +19,20 @@ const emptyForm = {
   obligationIds: [] as string[],
 };
 
+const ocrStatusLabel: Record<ImportItem["ocrStatus"], string> = {
+  PENDING: "Analyse bezig",
+  SUCCESS: "Analyse klaar",
+  ERROR: "Analyse mislukt",
+  UNSUPPORTED: "Niet ondersteund",
+};
+
+const ocrStatusClasses: Record<ImportItem["ocrStatus"], string> = {
+  PENDING: "bg-amber-100 text-amber-800",
+  SUCCESS: "bg-emerald-100 text-emerald-800",
+  ERROR: "bg-rose-100 text-rose-800",
+  UNSUPPORTED: "bg-stone-200 text-stone-700",
+};
+
 export function ImportsPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<ImportItem[]>([]);
@@ -31,23 +45,35 @@ export function ImportsPage() {
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [isDraggingQueue, setIsDraggingQueue] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  async function load() {
-    const [imports, types, fetchedContacts, fetchedObligations, fetchedSettings] = await Promise.all([
-      api.imports(),
-      api.documentTypes(),
-      api.contacts(""),
-      api.obligations(""),
-      api.settings(),
-    ]);
-    setItems(imports);
-    setDocumentTypes(referenceOptions(types));
-    setContacts(sortByLabel(fetchedContacts, (item) => item.name));
-    setObligations(sortByLabel(fetchedObligations, (item) => item.title));
-    setSettings(fetchedSettings);
+  async function load(options?: { silent?: boolean }) {
+    if (!options?.silent) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const [imports, types, fetchedContacts, fetchedObligations, fetchedSettings] = await Promise.all([
+        api.imports(),
+        api.documentTypes(),
+        api.contacts(""),
+        api.obligations(""),
+        api.settings(),
+      ]);
+      setItems(imports);
+      setDocumentTypes(referenceOptions(types));
+      setContacts(sortByLabel(fetchedContacts, (item) => item.name));
+      setObligations(sortByLabel(fetchedObligations, (item) => item.title));
+      setSettings(fetchedSettings);
+    } finally {
+      if (!options?.silent) {
+        setIsRefreshing(false);
+      }
+    }
   }
 
   useEffect(() => {
@@ -63,7 +89,20 @@ export function ImportsPage() {
     setSelectedId((current) => (current && items.some((item) => item.id === current) ? current : items[0].id));
   }, [items]);
 
+  useEffect(() => {
+    if (!items.some((item) => item.ocrStatus === "PENDING")) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      load({ silent: true }).catch(() => undefined);
+    }, 3000);
+
+    return () => window.clearInterval(timer);
+  }, [items]);
+
   const selectedItem = useMemo(() => items.find((item) => item.id === selectedId) ?? null, [items, selectedId]);
+  const pendingCount = items.filter((item) => item.ocrStatus === "PENDING").length;
   const draftLabel = (status: ImportItem["status"]) => (status === "PENDING" ? "Draft" : status);
   const percent = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -78,7 +117,7 @@ export function ImportsPage() {
       const payload = new FormData();
       payload.set("file", nextFile);
       const uploadedItem = await api.uploadImport(payload);
-      await load();
+      await load({ silent: true });
       setSelectedId(uploadedItem.id);
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Upload naar de importqueue mislukt.");
@@ -118,15 +157,46 @@ export function ImportsPage() {
 
       {error ? <div className="app-card px-6 py-4 text-red-700">{error}</div> : null}
 
-      <section className="grid gap-4 xl:grid-cols-[0.72fr_1.28fr]">
+      <section className="app-card overflow-hidden px-6 py-6">
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <div className="app-section-kicker">OCR-monitor</div>
+            <h3 className="app-section-title mt-2">Queue met live analyse</h3>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600">
+              Nieuwe items worden op de achtergrond geanalyseerd. Terwijl OCR draait, blijft de queue bruikbaar en wordt
+              de intake automatisch bijgewerkt zodra suggesties klaar zijn.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.35rem] bg-pine-700 px-4 py-4 text-white">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">In queue</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight">{items.length}</div>
+            </div>
+            <div className="rounded-[1.35rem] bg-amber-50 px-4 py-4 text-amber-900">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">Bezig</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight">{pendingCount}</div>
+            </div>
+            <div className="rounded-[1.35rem] bg-white px-4 py-4 text-ink-900 ring-1 ring-white/70">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Klaar voor intake</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight">{items.filter((item) => item.ocrStatus !== "PENDING").length}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[0.76fr_1.24fr]">
         <div className="app-card px-6 py-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="app-section-kicker">Queue</div>
               <h3 className="app-section-title mt-2">Importitems</h3>
             </div>
-            <button className="app-button-secondary" onClick={() => load().catch((loadError) => setError(loadError.message))} type="button">
-              Vernieuwen
+            <button
+              className="app-button-secondary"
+              onClick={() => load().catch((loadError) => setError(loadError.message))}
+              type="button"
+            >
+              {isRefreshing ? "Bezig..." : "Vernieuwen"}
             </button>
           </div>
 
@@ -163,7 +233,12 @@ export function ImportsPage() {
               type="file"
             />
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div />
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-pine-700/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-pine-700">
+                  Drag & drop
+                </div>
+                {isDraggingQueue ? <div className="text-sm text-pine-700">Bestand loslaten om te importeren</div> : null}
+              </div>
               <button className="app-button-secondary" disabled={isUploading} onClick={() => fileInputRef.current?.click()} type="button">
                 {isUploading ? "Uploaden..." : "Bestand kiezen"}
               </button>
@@ -174,17 +249,37 @@ export function ImportsPage() {
             {items.map((item) => (
               <button
                 className={[
-                  "w-full rounded-[1.35rem] px-4 py-4 text-left transition",
-                  selectedId === item.id ? "bg-pine-700 text-white shadow-[0_12px_24px_rgba(46,71,66,0.18)]" : "bg-sand-50/80 hover:bg-white",
+                  "w-full rounded-[1.35rem] border px-4 py-4 text-left transition",
+                  selectedId === item.id
+                    ? "border-pine-700 bg-pine-700 text-white shadow-[0_12px_24px_rgba(46,71,66,0.18)]"
+                    : "border-transparent bg-sand-50/80 hover:border-sand-200 hover:bg-white",
+                  item.ocrStatus === "PENDING" ? "app-pulse-subtle" : "",
                 ].join(" ")}
                 key={item.id}
                 onClick={() => setSelectedId(item.id)}
                 type="button"
               >
-                <div className="font-medium">{item.originalFilename}</div>
-                <div className={`mt-1 text-sm ${selectedId === item.id ? "text-white/78" : "text-stone-500"}`}>
-                  {formatFileSize(item.fileSize)} · {formatDate(item.discoveredAt)}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{item.originalFilename}</div>
+                    <div className={`mt-1 text-sm ${selectedId === item.id ? "text-white/78" : "text-stone-500"}`}>
+                      {formatFileSize(item.fileSize)} · {formatDate(item.discoveredAt)}
+                    </div>
+                  </div>
+                  <div
+                    className={[
+                      "shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.16em]",
+                      selectedId === item.id ? "bg-white/14 text-white" : ocrStatusClasses[item.ocrStatus],
+                    ].join(" ")}
+                  >
+                    {ocrStatusLabel[item.ocrStatus]}
+                  </div>
                 </div>
+                {item.analysis.identifiers.length ? (
+                  <div className={`mt-3 text-xs ${selectedId === item.id ? "text-white/80" : "text-stone-500"}`}>
+                    {item.analysis.identifiers.join(" · ")}
+                  </div>
+                ) : null}
                 {item.errorMessage ? <div className={`mt-2 text-sm ${selectedId === item.id ? "text-white/90" : "text-red-700"}`}>{item.errorMessage}</div> : null}
               </button>
             ))}
@@ -211,7 +306,7 @@ export function ImportsPage() {
                     contactIds: form.contactIds.map(Number),
                     obligationIds: form.obligationIds.map(Number),
                   });
-                  await load();
+                  await load({ silent: true });
                   navigate("/documents");
                 } catch (saveError) {
                   setError(saveError instanceof Error ? saveError.message : "Import afronden mislukt.");
@@ -221,33 +316,101 @@ export function ImportsPage() {
               }}
             >
               <div className="rounded-[1.35rem] bg-sand-50/82 p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-ink-900">Conceptstatus: {draftLabel(selectedItem.status)}</div>
-                    <div className="mt-1 text-sm text-stone-500">
-                      OCR: {selectedItem.ocrStatus}
-                      {selectedItem.errorMessage ? ` · ${selectedItem.errorMessage}` : ""}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-sm font-semibold text-ink-900">Conceptstatus: {draftLabel(selectedItem.status)}</div>
+                      <div className={`rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.16em] ${ocrStatusClasses[selectedItem.ocrStatus]}`}>
+                        {ocrStatusLabel[selectedItem.ocrStatus]}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-sm text-stone-500">
+                      {selectedItem.ocrStatus === "PENDING"
+                        ? "OCR draait op de achtergrond. Zodra de analyse klaar is, wordt dit intakeformulier automatisch bijgewerkt."
+                        : selectedItem.errorMessage || "Controleer de suggesties en vul alleen aan wat nog ontbreekt."}
                     </div>
                   </div>
-                  <a className="app-button-secondary" href={selectedItem.previewUrl} rel="noreferrer" target="_blank">
-                    Open preview
-                  </a>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedItem.ocrStatus !== "UNSUPPORTED" ? (
+                      <button
+                        className="app-button-secondary"
+                        disabled={isRetrying}
+                        onClick={async () => {
+                          setError("");
+                          setIsRetrying(true);
+                          try {
+                            await api.retryImportAnalysis(selectedItem.id);
+                            await load({ silent: true });
+                          } catch (retryError) {
+                            setError(retryError instanceof Error ? retryError.message : "Heranalyse starten mislukt.");
+                          } finally {
+                            setIsRetrying(false);
+                          }
+                        }}
+                        type="button"
+                      >
+                        {isRetrying ? "Opnieuw starten..." : "Opnieuw analyseren"}
+                      </button>
+                    ) : null}
+                    <a className="app-button-secondary" href={selectedItem.previewUrl} rel="noreferrer" target="_blank">
+                      Open preview
+                    </a>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(320px,0.7fr)]">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(320px,0.68fr)]">
                 <div className="space-y-4">
-                  <div className="rounded-[1.35rem] bg-sand-50/82 p-4">
-                    <div className="text-sm font-semibold text-ink-900">Analysevertrouwen</div>
-                    <div className="mt-3 space-y-2 text-sm text-stone-600">
-                      <div>Totaal: {percent(selectedItem.analysis.confidence.overall)}</div>
-                      <div>Titel: {percent(selectedItem.analysis.confidence.title)}</div>
-                      <div>Documentsoort: {percent(selectedItem.analysis.confidence.documentType)}</div>
-                      <div>Contact: {percent(selectedItem.analysis.confidence.contact)}</div>
-                      <div>Documentdatum: {percent(selectedItem.analysis.confidence.documentDate)}</div>
-                      <div>Vervaldatum: {percent(selectedItem.analysis.confidence.expiryDate)}</div>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div className="rounded-[1.25rem] bg-white px-4 py-4 ring-1 ring-stone-100">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Vertrouwen</div>
+                      <div className="mt-3 text-2xl font-semibold tracking-tight text-ink-900">{percent(selectedItem.analysis.confidence.overall)}</div>
+                    </div>
+                    <div className="rounded-[1.25rem] bg-white px-4 py-4 ring-1 ring-stone-100">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Herkende velden</div>
+                      <div className="mt-3 text-2xl font-semibold tracking-tight text-ink-900">
+                        {[form.title, form.documentTypeId, form.contactId, form.documentDate, form.expiryDate].filter(Boolean).length}
+                      </div>
+                    </div>
+                    <div className="rounded-[1.25rem] bg-white px-4 py-4 ring-1 ring-stone-100">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Referenties</div>
+                      <div className="mt-3 text-2xl font-semibold tracking-tight text-ink-900">{selectedItem.analysis.identifiers.length}</div>
                     </div>
                   </div>
+
+                  <div className="rounded-[1.35rem] bg-sand-50/82 p-4">
+                    <div className="text-sm font-semibold text-ink-900">Analysevertrouwen per veld</div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      {[
+                        ["Titel", selectedItem.analysis.confidence.title],
+                        ["Documentsoort", selectedItem.analysis.confidence.documentType],
+                        ["Contact", selectedItem.analysis.confidence.contact],
+                        ["Documentdatum", selectedItem.analysis.confidence.documentDate],
+                        ["Vervaldatum", selectedItem.analysis.confidence.expiryDate],
+                      ].map(([label, value]) => (
+                        <div className="rounded-2xl bg-white/80 px-4 py-3" key={label}>
+                          <div className="flex items-center justify-between gap-3 text-sm">
+                            <span className="font-medium text-ink-900">{label}</span>
+                            <span className="text-stone-500">{percent(Number(value))}</span>
+                          </div>
+                          <div className="mt-2 h-2 rounded-full bg-stone-100">
+                            <div className="h-2 rounded-full bg-pine-700" style={{ width: percent(Number(value)) }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedItem.analysis.signals.length ? (
+                    <div className="rounded-[1.35rem] bg-pine-700 px-4 py-4 text-white">
+                      <div className="text-sm font-semibold">Waarom deze suggesties?</div>
+                      <div className="mt-3 space-y-2 text-sm text-white/82">
+                        {selectedItem.analysis.signals.map((signal) => (
+                          <div key={signal}>{signal}</div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {selectedItem.analysis.warnings.length ? (
                     <div className="rounded-[1.35rem] bg-amber-50 p-4">
@@ -264,7 +427,11 @@ export function ImportsPage() {
                 <div className="overflow-hidden rounded-[1.35rem] bg-stone-100/80 ring-1 ring-white/70">
                   {selectedItem.mimeType.startsWith("image/") ? (
                     <div className="flex min-h-[24rem] items-center justify-center p-4">
-                      <img alt={selectedItem.originalFilename} className="max-h-[30rem] w-auto max-w-full rounded-2xl object-contain shadow-[0_14px_32px_rgba(29,28,23,0.12)]" src={selectedItem.previewUrl} />
+                      <img
+                        alt={selectedItem.originalFilename}
+                        className="max-h-[30rem] w-auto max-w-full rounded-2xl object-contain shadow-[0_14px_32px_rgba(29,28,23,0.12)]"
+                        src={selectedItem.previewUrl}
+                      />
                     </div>
                   ) : (
                     <iframe className="min-h-[30rem] w-full border-0" src={selectedItem.previewUrl} title={selectedItem.originalFilename} />
@@ -282,14 +449,22 @@ export function ImportsPage() {
                   <label className="app-label">Documentsoort</label>
                   <select className="app-select" required value={form.documentTypeId} onChange={(event) => setForm({ ...form, documentTypeId: event.target.value })}>
                     <option value="">Kies een documentsoort</option>
-                    {documentTypes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                    {documentTypes.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="app-label">Primair contact</label>
                   <select className="app-select" value={form.contactId} onChange={(event) => setForm({ ...form, contactId: event.target.value })}>
                     <option value="">Niet gekoppeld</option>
-                    {contacts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                    {contacts.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -361,7 +536,7 @@ export function ImportsPage() {
                           setForm({
                             ...form,
                             obligationIds: event.target.checked
-                              ? [...form.obligationIds, String(item.id)]
+                              ? [...new Set([...form.obligationIds, String(item.id)])]
                               : form.obligationIds.filter((value) => value !== String(item.id)),
                           })
                         }
@@ -388,7 +563,7 @@ export function ImportsPage() {
               ) : null}
 
               <div className="flex flex-wrap gap-3">
-                <button className="app-button" disabled={isSaving} type="submit">
+                <button className="app-button" disabled={isSaving || selectedItem.ocrStatus === "PENDING"} type="submit">
                   {isSaving ? "Bezig..." : "Concept goedkeuren en opnemen"}
                 </button>
                 <button
@@ -403,7 +578,7 @@ export function ImportsPage() {
                     setIsDeleting(true);
                     try {
                       await api.deleteImport(selectedItem.id);
-                      await load();
+                      await load({ silent: true });
                     } catch (deleteError) {
                       setError(deleteError instanceof Error ? deleteError.message : "Importitem verwijderen mislukt.");
                     } finally {

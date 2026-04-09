@@ -34,7 +34,7 @@ const modules = [
   {
     title: "Import",
     description:
-      "Bestanden die in de importmap worden geplaatst of direct naar de queue worden gesleept verschijnen als concept in de intakequeue. Daar controleer en verrijk je de metadata voordat ze definitief worden opgenomen.",
+      "Bestanden die in de importmap worden geplaatst of direct naar de queue worden gesleept verschijnen als concept in de intakequeue. Daar controleer en verrijk je de metadata voordat ze definitief worden opgenomen, terwijl OCR op de achtergrond doorwerkt.",
   },
   {
     title: "Auditlog",
@@ -47,8 +47,9 @@ const importFlow = [
   "Plaats bestanden buiten de app in de bewaakte importmap.",
   "Of sleep documenten direct naar de queue in het importscherm om dezelfde intakeflow meteen vanuit de app te starten.",
   "DOMUS ontdekt nieuwe bestanden automatisch en zet ze in de importqueue als draft.",
-  "OCR en tekstanalyse proberen titel, documentsoort, contact, data, dossier en notities al vooraf in te vullen.",
-  "In de intake controleer je preview, confidence en waarschuwingen en vul je alleen aan wat nog ontbreekt.",
+  "OCR en tekstanalyse proberen titel, documentsoort, contact, data, dossier, notities en herkenbare referenties al vooraf in te vullen.",
+  "In de intake zie je live of analyse nog bezig is, welke signalen tot een suggestie hebben geleid en kun je indien nodig een heranalyse starten.",
+  "Daarna controleer je preview, confidence en waarschuwingen en vul je alleen aan wat nog ontbreekt.",
   "Pas na jouw akkoord wordt het bestand verplaatst naar de documentopslag en als definitief document opgenomen.",
 ];
 
@@ -167,9 +168,9 @@ export function HelpPage() {
             vooringevuld.
           </p>
           <p className="mt-4 text-sm leading-7 text-stone-700">
-            De intake toont confidence-scores en waarschuwingen, zodat je snel ziet welke velden betrouwbaar zijn
-            en welke nog handmatige controle nodig hebben. Hierdoor blijft de gebruiker in controle, terwijl de
-            app het meeste voorwerk al doet.
+            De intake toont confidence-scores, verklarende signalen, herkenbare referenties en waarschuwingen,
+            zodat je snel ziet welke velden betrouwbaar zijn en welke nog handmatige controle nodig hebben.
+            Als OCR vastloopt of te weinig oplevert, kun je vanuit hetzelfde scherm direct een heranalyse starten.
           </p>
         </div>
       </section>

@@ -2,16 +2,19 @@
 
 All notable changes to DOMUS are documented in this file.
 
-## [5.6.1] - 2026-04-09
+## [1.6.2] - 2026-04-09
 
 ### Changed
-- Applicatieversie bijgewerkt naar `5.6.1`.
+- Applicatieversie bijgewerkt naar `1.6.2`.
 - Beheerfuncties voor instellingen, referentietabellen en back-ups nu strikter afgeschermd voor beheerders.
 - Zoek- en documentlijsten verfijnd met debounce, laadstatussen en beter klikbaar/resultaatgericht gedrag.
 - Navigatietellers in de app-shell worden nu lichter opgehaald en actiever ververst na mutaties.
 - Back-upoverzicht toont geen absolute serverpaden meer en gebruikt een veiliger SQLite-backuppad.
+- Importanalyse draait nu asynchroon in een achtergrondqueue, zodat uploads en mapdetectie niet meer blokkeren tijdens OCR.
+- OCR- en importsuggesties aangescherpt met meer PDF-context, betere patroonherkenning, referentie-extractie en een heranalyse-optie in de intake.
+- Importscherm en dashboard visueel versterkt met duidelijkere statuskaarten, live OCR-signalen en een sterkere informatiehiërarchie.
 
-## [5.6.0] - 2026-04-09
+## [1.6.1] - 2026-04-09
 
 ### Added
 - Importqueue ondersteunt nu drag-and-drop en directe bestandskeuze vanuit het importscherm.
@@ -19,7 +22,7 @@ All notable changes to DOMUS are documented in this file.
 ### Changed
 - Documenten die rechtstreeks naar de queue worden geüpload doorlopen nu dezelfde OCR- en prefill-flow als bestanden uit de bewaakte importmap.
 - Import-dropzone vereenvoudigd door de extra uitlegtekst uit het scherm te halen en de uitleg naar de help-pagina te verplaatsen.
-- Applicatieversie bijgewerkt naar `5.6.0`.
+- Applicatieversie bijgewerkt naar `1.6.1`.
 
 ## [1.7.0] - 2026-04-07
 

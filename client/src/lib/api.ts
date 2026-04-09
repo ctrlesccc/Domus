@@ -51,6 +51,7 @@ export const api = {
   imports: () => request<ImportItem[]>("/api/imports"),
   syncImports: () => request<{ success: true }>("/api/imports/sync", { method: "POST" }),
   uploadImport: (payload: FormData) => request<{ id: number }>("/api/imports/upload", { method: "POST", body: payload }),
+  retryImportAnalysis: (id: number) => request<{ success: true }>(`/api/imports/${id}/retry-analysis`, { method: "POST" }),
   deleteImport: (id: number) => request<void>(`/api/imports/${id}`, { method: "DELETE" }),
   finalizeImport: (id: number, payload: unknown) => request<{ documentId: number }>(`/api/imports/${id}/finalize`, { method: "POST", body: JSON.stringify(payload) }),
 

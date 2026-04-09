@@ -300,6 +300,8 @@ export type ImportItem = {
       overall: number;
     };
     warnings: string[];
+    signals: string[];
+    identifiers: string[];
   };
   previewUrl: string;
   downloadUrl: string;

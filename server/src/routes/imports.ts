@@ -1,14 +1,13 @@
-import { Router } from "express";
+import { ImportStatus } from "@prisma/client";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Router } from "express";
 import multer from "multer";
-import { ImportStatus } from "@prisma/client";
-import { prisma } from "../lib/prisma.js";
-import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
-import { analyzeImportDocument } from "../lib/import-analysis.js";
 import { config } from "../config.js";
-import { syncImportFolder } from "../lib/import-watcher.js";
+import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
+import { prisma } from "../lib/prisma.js";
+import { syncImportFolder, resetAndQueueImportAnalysis } from "../lib/import-watcher.js";
 import { assertUploadIsAllowed, persistImportedFile, persistImportUpload } from "../lib/storage.js";
 import { documentSchema } from "../lib/validators.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -17,6 +16,71 @@ export const importsRouter = Router();
 const upload = multer({
   dest: path.resolve(config.storageRoot, "..", "tmp"),
 });
+
+function extractIdentifiers(text: string | null) {
+  if (!text) {
+    return [];
+  }
+
+  const matches = new Set<string>();
+  const patterns = [
+    /(?:factuurnummer|invoice(?:\s+number)?|polisnummer|policy(?:\s+number)?|contractnummer|klantnummer|relatienummer)[\s:#-]*([A-Z0-9./-]{4,})/gi,
+    /\b([A-Z]{2}\d{2}[A-Z0-9]{6,})\b/g,
+  ];
+
+  for (const pattern of patterns) {
+    for (const match of text.matchAll(pattern)) {
+      const value = match[1]?.trim();
+      if (value) {
+        matches.add(value);
+      }
+    }
+  }
+
+  return [...matches].slice(0, 4);
+}
+
+function buildImportAnalysis(item: Awaited<ReturnType<typeof prisma.importDocument.findMany>>[number]) {
+  const titleConfidence = item.draftTitle ? (item.ocrStatus === "SUCCESS" ? 0.92 : 0.55) : 0;
+  const documentTypeConfidence = item.draftDocumentTypeId ? 0.8 : 0;
+  const contactConfidence = item.draftContactId ? 0.76 : 0;
+  const documentDateConfidence = item.draftDocumentDate ? 0.7 : 0;
+  const expiryDateConfidence = item.draftExpiryDate ? 0.62 : 0;
+  const identifiers = extractIdentifiers(item.ocrText);
+
+  return {
+    confidence: {
+      title: titleConfidence,
+      documentType: documentTypeConfidence,
+      contact: contactConfidence,
+      documentDate: documentDateConfidence,
+      expiryDate: expiryDateConfidence,
+      overall: [titleConfidence, documentTypeConfidence, contactConfidence, documentDateConfidence, expiryDateConfidence].reduce(
+        (sum, value) => sum + value,
+        0,
+      ) / 5,
+    },
+    warnings: [
+      ...(item.ocrStatus === "PENDING" ? ["OCR-analyse loopt nog op de achtergrond."] : []),
+      ...(item.ocrStatus === "ERROR" ? ["OCR-analyse is mislukt; controleer metadata handmatig of start heranalyse."] : []),
+      ...(item.ocrStatus === "UNSUPPORTED" ? ["Dit bestandstype ondersteunt geen OCR-prefill."] : []),
+      ...(!item.draftDocumentTypeId ? ["Documentsoort kon niet zeker worden herkend."] : []),
+      ...(!item.draftContactId ? ["Contact kon niet automatisch worden gekoppeld."] : []),
+      ...(!item.draftDocumentDate ? ["Documentdatum ontbreekt of kon niet worden herkend."] : []),
+    ],
+    signals: [
+      ...(item.ocrStatus === "PENDING" ? ["Document staat in de OCR-wachtrij en vult de intake automatisch aan zodra de analyse klaar is."] : []),
+      ...(item.draftTitle ? ["Titel afgeleid uit de meest betekenisvolle regel in het document of uit de bestandsnaam."] : []),
+      ...(item.draftDocumentTypeId ? ["Documentsoort gekozen op basis van trefwoorden en overlap met bestaande documentpatronen."] : []),
+      ...(item.draftContactId ? ["Contact gekoppeld op basis van naamherkenning in OCR-tekst en bestandsnaam."] : []),
+      ...(item.draftDocumentDate ? ["Documentdatum gekozen uit herkende datums, met extra gewicht voor woorden als datum of factuurdatum."] : []),
+      ...(item.draftExpiryDate ? ["Vervaldatum gekozen uit herkende datums, met extra gewicht voor woorden als vervaldatum of geldig tot."] : []),
+      ...(item.draftDossierTopic ? ["Dossier voorgesteld op basis van herkenbare onderwerpstermen zoals verzekeringen, wonen, zorg of energie."] : []),
+      ...(identifiers.length ? [`Herkenbare referenties gevonden: ${identifiers.join(", ")}.`] : []),
+    ],
+    identifiers,
+  };
+}
 
 importsRouter.use(requireAuth);
 
@@ -32,30 +96,7 @@ importsRouter.get("/", async (_request, response) => {
   return response.json(
     items.map((item) => ({
       ...item,
-      analysis: {
-        confidence: {
-          title: item.draftTitle ? (item.ocrStatus === "SUCCESS" ? 0.9 : 0.55) : 0,
-          documentType: item.draftDocumentTypeId ? 0.78 : 0,
-          contact: item.draftContactId ? 0.74 : 0,
-          documentDate: item.draftDocumentDate ? 0.66 : 0,
-          expiryDate: item.draftExpiryDate ? 0.56 : 0,
-          overall:
-            [
-              item.draftTitle ? (item.ocrStatus === "SUCCESS" ? 0.9 : 0.55) : 0,
-              item.draftDocumentTypeId ? 0.78 : 0,
-              item.draftContactId ? 0.74 : 0,
-              item.draftDocumentDate ? 0.66 : 0,
-              item.draftExpiryDate ? 0.56 : 0,
-            ].reduce((sum, value) => sum + value, 0) / 5,
-        },
-        warnings: [
-          ...(item.ocrStatus === "ERROR" ? ["OCR-analyse is mislukt; controleer metadata handmatig."] : []),
-          ...(item.ocrStatus === "UNSUPPORTED" ? ["Dit bestandstype ondersteunt geen OCR-prefill."] : []),
-          ...(!item.draftDocumentTypeId ? ["Documentsoort kon niet zeker worden herkend."] : []),
-          ...(!item.draftContactId ? ["Contact kon niet automatisch worden gekoppeld."] : []),
-          ...(!item.draftDocumentDate ? ["Documentdatum ontbreekt of kon niet worden herkend."] : []),
-        ],
-      },
+      analysis: buildImportAnalysis(item),
       previewUrl: `/api/imports/${item.id}/preview`,
       downloadUrl: `/api/imports/${item.id}/download`,
     })),
@@ -88,7 +129,7 @@ importsRouter.post("/upload", upload.single("file"), async (request, response) =
       },
     });
 
-    await analyzeImportDocument({
+    await resetAndQueueImportAnalysis({
       id: item.id,
       sourcePath: persisted.sourcePath,
       mimeType: request.file.mimetype,
@@ -112,6 +153,37 @@ importsRouter.post("/upload", upload.single("file"), async (request, response) =
     await fs.rm(request.file.path, { force: true }).catch(() => undefined);
     throw error;
   }
+});
+
+importsRouter.post("/:id/retry-analysis", async (request, response) => {
+  const id = Number(request.params.id);
+  const item = await prisma.importDocument.findUnique({ where: { id } });
+
+  if (!item) {
+    return response.status(404).json({ message: "Importitem niet gevonden." });
+  }
+
+  if (item.status === "IMPORTED") {
+    return response.status(409).json({ message: "Geimporteerde items kunnen niet opnieuw worden geanalyseerd." });
+  }
+
+  await resetAndQueueImportAnalysis({
+    id: item.id,
+    sourcePath: item.sourcePath,
+    mimeType: item.mimeType,
+    originalFilename: item.originalFilename,
+  });
+
+  await writeAuditLog({
+    entityType: "import-document",
+    entityId: id,
+    action: "retry-analysis",
+    ...auditActorFromRequest(request),
+    oldValue: item,
+    newValue: { ocrStatus: "PENDING" },
+  });
+
+  return response.json({ success: true });
 });
 
 importsRouter.delete("/:id", async (request, response) => {

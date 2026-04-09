@@ -294,6 +294,7 @@ Ondersteunt:
 
 - ophalen van importqueue
 - handmatige sync
+- opnieuw analyseren van importitems
 - finaliseren van importitems
 - preview en download van draft-bestanden
 
@@ -432,7 +433,7 @@ Verantwoordelijkheden:
 - importmap scannen
 - nieuwe bestanden registreren
 - bestaande pending items synchroniseren
-- OCR/analyse triggeren
+- OCR/analyse in een achtergrondqueue plaatsen
 
 ## 8.2 Analyselaag
 
@@ -442,6 +443,7 @@ Technieken:
 
 - `pdf-parse` voor PDF-tekstextractie
 - `tesseract.js` voor OCR op afbeeldingen
+- patroonherkenning op documenttype, contact, datums en herkenbare referenties
 
 Resultaat:
 
@@ -453,7 +455,7 @@ Resultaat:
 - draftvervaldatum
 - draftdossier
 - draftnotities
-- confidence en waarschuwingen
+- confidence, waarschuwingen en verklarende signalen voor de intake-UI
 
 ## 8.3 Finalisatie
 
@@ -594,8 +596,7 @@ Sterke punten:
 Beperkingen:
 
 - geen horizontale schaalstrategie
-- geen message queue voor importverwerking
-- geen aparte background worker
+- importanalyse draait nog in-process en niet in een aparte worker/container
 - geen server-side pagination op alle lijsten
 - dashboard bevat nog steeds relatief rijke samengestelde queries, ondanks lichtere navigatietellers
 

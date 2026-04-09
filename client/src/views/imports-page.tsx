@@ -157,31 +157,26 @@ export function ImportsPage() {
 
       {error ? <div className="app-card px-6 py-4 text-red-700">{error}</div> : null}
 
-      <section className="app-card overflow-hidden px-6 py-6">
-        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div>
-            <div className="app-section-kicker">OCR-monitor</div>
-            <h3 className="app-section-title mt-2">Queue met live analyse</h3>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600">
-              Nieuwe items worden op de achtergrond geanalyseerd. Terwijl OCR draait, blijft de queue bruikbaar en wordt
-              de intake automatisch bijgewerkt zodra suggesties klaar zijn.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[1.35rem] bg-pine-700 px-4 py-4 text-white">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">In queue</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight">{items.length}</div>
-            </div>
-            <div className="rounded-[1.35rem] bg-amber-50 px-4 py-4 text-amber-900">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">Bezig</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight">{pendingCount}</div>
-            </div>
-            <div className="rounded-[1.35rem] bg-white px-4 py-4 text-ink-900 ring-1 ring-white/70">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Klaar voor intake</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight">{items.filter((item) => item.ocrStatus !== "PENDING").length}</div>
-            </div>
+      <section className="grid gap-3 lg:grid-cols-[1.25fr_0.25fr_0.25fr_0.25fr]">
+        <div className="app-card flex min-h-24 flex-col justify-between px-5 py-5">
+          <div className="min-h-[2.5rem] pr-1 text-[13px] font-medium leading-5 text-stone-500">Queue met live analyse</div>
+          <div className="mt-3 text-sm leading-7 text-stone-600">
+            Nieuwe items worden op de achtergrond geanalyseerd en vullen de intake automatisch aan zodra suggesties klaar zijn.
           </div>
         </div>
+
+        {[
+          ["In queue", items.length],
+          ["Bezig", pendingCount],
+          ["Klaar voor intake", items.filter((item) => item.ocrStatus !== "PENDING").length],
+        ].map(([label, value]) => (
+          <div className="app-card flex min-h-24 flex-col justify-between px-4 py-4 sm:px-5" key={String(label)}>
+            <div className="min-h-[2.75rem] pr-1 text-[13px] font-medium leading-5 text-stone-500 sm:min-h-[2.5rem]">
+              {label}
+            </div>
+            <div className="mt-3 text-[1.45rem] font-semibold leading-none tracking-tight text-ink-900 sm:text-[1.55rem]">{value}</div>
+          </div>
+        ))}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[0.76fr_1.24fr]">

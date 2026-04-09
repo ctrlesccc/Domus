@@ -7,14 +7,14 @@ import { formatCurrency, formatDate, formatFileSize } from "../lib/format";
 
 const chartPalette = ["#2e4742", "#6e8a83", "#c29a69", "#8e5a34", "#9aa79f", "#d7b98c"];
 const dashboardStatCards = [
-  { label: "Documenten", accent: "bg-pine-700/10 text-pine-700", icon: "DOC", to: "/documents" },
-  { label: "Zakelijke contacten", accent: "bg-sand-100 text-sand-500", icon: "REL", to: "/contacts" },
-  { label: "Persoonlijke contacten", accent: "bg-rose-100 text-rose-700", icon: "PRS", to: "/personal-contacts" },
-  { label: "Verplichtingen", accent: "bg-amber-100 text-amber-700", icon: "VST", to: "/obligations" },
-  { label: "Actieve verplichtingen", accent: "bg-emerald-100 text-emerald-700", icon: "ACT", to: "/obligations" },
-  { label: "Importqueue", accent: "bg-stone-200 text-stone-700", icon: "IMP", to: "/imports" },
-  { label: "Per maand", accent: "bg-stone-200 text-stone-700", icon: "PMD", to: "/obligations" },
-  { label: "Per jaar", accent: "bg-ink-900/10 text-ink-900", icon: "PJR", to: "/obligations" },
+  { label: "Documenten", to: "/documents" },
+  { label: "Zakelijke contacten", to: "/contacts" },
+  { label: "Persoonlijke contacten", to: "/personal-contacts" },
+  { label: "Verplichtingen", to: "/obligations" },
+  { label: "Actieve verplichtingen", to: "/obligations" },
+  { label: "Importqueue", to: "/imports" },
+  { label: "Per maand", to: "/obligations" },
+  { label: "Per jaar", to: "/obligations" },
 ] as const;
 
 export function DashboardPage() {
@@ -40,41 +40,7 @@ export function DashboardPage() {
         eyebrow="Dashboard"
         title="Actueel overzicht"
         description="Zie in een oogopslag welke documenten, contracten en vaste lasten aandacht nodig hebben."
-        action={{ label: "Nieuw document", to: "/documents/new" }}
       />
-
-      <section className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[1.8rem] bg-pine-700 px-6 py-6 text-white shadow-[0_18px_42px_rgba(46,71,66,0.22)]">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/68">Focus vandaag</div>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight">Werk vanuit signalen in plaats van losse lijsten.</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">
-            Het dashboard bundelt import, vervaldatums, aflopende verplichtingen en kosten in een compact werkoverzicht.
-            Zo zie je meteen waar actie nodig is en waar de administratie nog aanvulling vraagt.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link className="app-button-secondary border-white/20 bg-white/10 text-white hover:bg-white/18 hover:text-white" to="/imports">
-              Open importqueue
-            </Link>
-            <Link className="app-button-secondary border-white/20 bg-white/10 text-white hover:bg-white/18 hover:text-white" to="/planning">
-              Bekijk planning
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-          {[
-            ["Aandacht nu", data.documentsExpiringSoon.length + data.obligationsEndingSoon.length, "Documenten en verplichtingen vragen binnenkort actie."],
-            ["Datakwaliteit", data.missingData.documentsWithoutDate.length + data.missingData.obligationsWithoutAmount.length, "Ontbrekende gegevens vallen hier direct op."],
-            ["Import klaar", data.importQueue.filter((item) => item.ocrStatus !== "PENDING").length, "Items die je direct kunt nalopen en opnemen."],
-          ].map(([label, value, description]) => (
-            <div className="app-card px-5 py-5" key={label}>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">{value}</div>
-              <div className="mt-2 text-sm leading-6 text-stone-500">{description}</div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 2xl:grid-cols-8">
         {[
@@ -92,15 +58,8 @@ export function DashboardPage() {
             key={label}
             to={dashboardStatCards[index].to}
           >
-            <div className="flex items-start justify-between gap-2 sm:gap-3">
-              <div className="min-h-[2.75rem] pr-1 text-[13px] font-medium leading-5 text-stone-500 sm:min-h-[2.5rem]">
-                {label}
-              </div>
-              <div
-                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold tracking-[0.14em] sm:px-2.5 sm:text-[11px] ${dashboardStatCards[index].accent}`}
-              >
-                {dashboardStatCards[index].icon}
-              </div>
+            <div className="min-h-[2.75rem] pr-1 text-[13px] font-medium leading-5 text-stone-500 sm:min-h-[2.5rem]">
+              {label}
             </div>
             <div
               className={[
@@ -118,12 +77,9 @@ export function DashboardPage() {
 
       <section className="grid gap-3 xl:grid-cols-[1fr_1fr]">
         <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="app-section-kicker">Signalen</div>
-              <h3 className="app-section-title mt-2">Documenten die bijna verlopen</h3>
-            </div>
-            <div className="rounded-full bg-pine-700/10 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-pine-700">DOC</div>
+          <div>
+            <div className="app-section-kicker">Signalen</div>
+            <h3 className="app-section-title mt-2">Documenten die bijna verlopen</h3>
           </div>
           <div className="mt-4 flex-1 space-y-3">
             {data.documentsExpiringSoon.length ? (
@@ -142,12 +98,9 @@ export function DashboardPage() {
         </div>
 
         <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="app-section-kicker">Aandacht</div>
-              <h3 className="app-section-title mt-2">Aflopende verplichtingen</h3>
-            </div>
-            <div className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-amber-700">VST</div>
+          <div>
+            <div className="app-section-kicker">Aandacht</div>
+            <h3 className="app-section-title mt-2">Aflopende verplichtingen</h3>
           </div>
           <div className="mt-4 flex-1 space-y-3">
             {data.obligationsEndingSoon.length ? (
@@ -242,12 +195,9 @@ export function DashboardPage() {
           </div>
 
           <div className="app-card h-full px-6 py-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="app-section-kicker">Belangrijk</div>
-                <h3 className="app-section-title mt-2">Belangrijke documenten</h3>
-              </div>
-              <div className="rounded-full bg-rose-100 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-rose-700">IMP</div>
+            <div>
+              <div className="app-section-kicker">Belangrijk</div>
+              <h3 className="app-section-title mt-2">Belangrijke documenten</h3>
             </div>
             <div className="mt-4 space-y-2">
               {data.importantDocuments.length ? (
@@ -290,12 +240,9 @@ export function DashboardPage() {
         </div>
 
         <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="app-section-kicker">Planning</div>
-              <h3 className="app-section-title mt-2">Komende afschrijvingen ({data.planningWindowDays} dagen)</h3>
-            </div>
-            <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">PLN</div>
+          <div>
+            <div className="app-section-kicker">Planning</div>
+            <h3 className="app-section-title mt-2">Komende afschrijvingen ({data.planningWindowDays} dagen)</h3>
           </div>
           <div className="mt-4 flex-1">
             {data.upcomingPlannedCharges.length ? (
@@ -308,12 +255,9 @@ export function DashboardPage() {
       </section>
 
       <section className="app-card px-6 py-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="app-section-kicker">Import</div>
-            <h3 className="app-section-title mt-2">Nieuwe importitems</h3>
-          </div>
-          <div className="rounded-full bg-stone-200 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-stone-700">IMP</div>
+        <div>
+          <div className="app-section-kicker">Import</div>
+          <h3 className="app-section-title mt-2">Nieuwe importitems</h3>
         </div>
         <div className="mt-4 flex-1 space-y-3">
           {data.importQueue.length ? (

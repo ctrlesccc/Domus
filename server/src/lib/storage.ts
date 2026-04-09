@@ -70,6 +70,20 @@ export async function persistUpload(file: Express.Multer.File) {
   };
 }
 
+export async function persistImportUpload(file: Express.Multer.File) {
+  await ensureStorageDirectory();
+
+  const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const storedFilename = `${crypto.randomUUID()}-${sanitizedOriginalName}`;
+  const targetPath = path.join(config.importRoot, storedFilename);
+
+  await fs.rename(file.path, targetPath);
+
+  return {
+    sourcePath: targetPath,
+  };
+}
+
 export async function deleteStoredFile(storagePath: string) {
   await fs.rm(storagePath, { force: true });
 }

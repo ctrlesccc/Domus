@@ -2,6 +2,16 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [5.6.0] - 2026-04-09
+
+### Added
+- Importqueue ondersteunt nu drag-and-drop en directe bestandskeuze vanuit het importscherm.
+
+### Changed
+- Documenten die rechtstreeks naar de queue worden geüpload doorlopen nu dezelfde OCR- en prefill-flow als bestanden uit de bewaakte importmap.
+- Import-dropzone vereenvoudigd door de extra uitlegtekst uit het scherm te halen en de uitleg naar de help-pagina te verplaatsen.
+- Applicatieversie bijgewerkt naar `5.6.0`.
+
 ## [1.7.0] - 2026-04-07
 
 ### Added

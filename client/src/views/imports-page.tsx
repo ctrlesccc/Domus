@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
@@ -31,6 +31,9 @@ export function ImportsPage() {
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDraggingQueue, setIsDraggingQueue] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function load() {
     const [imports, types, fetchedContacts, fetchedObligations, fetchedSettings] = await Promise.all([
@@ -63,6 +66,29 @@ export function ImportsPage() {
   const selectedItem = useMemo(() => items.find((item) => item.id === selectedId) ?? null, [items, selectedId]);
   const draftLabel = (status: ImportItem["status"]) => (status === "PENDING" ? "Draft" : status);
   const percent = (value: number) => `${Math.round(value * 100)}%`;
+
+  async function handleQueueUpload(nextFile: File | null) {
+    if (!nextFile) {
+      return;
+    }
+
+    setError("");
+    setIsUploading(true);
+    try {
+      const payload = new FormData();
+      payload.set("file", nextFile);
+      const uploadedItem = await api.uploadImport(payload);
+      await load();
+      setSelectedId(uploadedItem.id);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Upload naar de importqueue mislukt.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
 
   useEffect(() => {
     if (!selectedItem) {
@@ -102,6 +128,46 @@ export function ImportsPage() {
             <button className="app-button-secondary" onClick={() => load().catch((loadError) => setError(loadError.message))} type="button">
               Vernieuwen
             </button>
+          </div>
+
+          <div
+            className={[
+              "mt-5 rounded-[1.5rem] border-2 border-dashed p-5 transition",
+              isDraggingQueue ? "border-pine-700 bg-sand-50 shadow-[0_12px_30px_rgba(46,71,66,0.08)]" : "border-stone-300 bg-white/70",
+            ].join(" ")}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              setIsDraggingQueue(true);
+            }}
+            onDragLeave={(event) => {
+              event.preventDefault();
+              if (event.currentTarget === event.target) {
+                setIsDraggingQueue(false);
+              }
+            }}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDraggingQueue(true);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDraggingQueue(false);
+              handleQueueUpload(event.dataTransfer.files?.[0] ?? null).catch(() => undefined);
+            }}
+          >
+            <input
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+              className="hidden"
+              onChange={(event) => handleQueueUpload(event.target.files?.[0] ?? null).catch(() => undefined)}
+              ref={fileInputRef}
+              type="file"
+            />
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div />
+              <button className="app-button-secondary" disabled={isUploading} onClick={() => fileInputRef.current?.click()} type="button">
+                {isUploading ? "Uploaden..." : "Bestand kiezen"}
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 space-y-3">

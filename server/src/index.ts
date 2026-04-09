@@ -1,10 +1,12 @@
 import { createApp } from "./app.js";
 import { config } from "./config.js";
+import { ensureDatabaseReady } from "./lib/database-maintenance.js";
 import { startImportWatcher } from "./lib/import-watcher.js";
 import { ensureStorageDirectory } from "./lib/storage.js";
 
 async function main() {
   await ensureStorageDirectory();
+  await ensureDatabaseReady();
   await startImportWatcher();
   const app = await createApp();
   app.listen(config.port, () => {

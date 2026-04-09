@@ -1,15 +1,22 @@
 import { Router } from "express";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import path from "node:path";
+import multer from "multer";
 import { ImportStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { auditActorFromRequest, writeAuditLog } from "../lib/audit.js";
+import { analyzeImportDocument } from "../lib/import-analysis.js";
+import { config } from "../config.js";
 import { syncImportFolder } from "../lib/import-watcher.js";
-import { persistImportedFile } from "../lib/storage.js";
+import { assertUploadIsAllowed, persistImportedFile, persistImportUpload } from "../lib/storage.js";
 import { documentSchema } from "../lib/validators.js";
 import { requireAuth } from "../middleware/auth.js";
 
 export const importsRouter = Router();
+const upload = multer({
+  dest: path.resolve(config.storageRoot, "..", "tmp"),
+});
 
 importsRouter.use(requireAuth);
 
@@ -58,6 +65,53 @@ importsRouter.get("/", async (_request, response) => {
 importsRouter.post("/sync", async (_request, response) => {
   await syncImportFolder();
   return response.json({ success: true });
+});
+
+importsRouter.post("/upload", upload.single("file"), async (request, response) => {
+  if (!request.file) {
+    return response.status(400).json({ message: "Bestand is verplicht." });
+  }
+
+  try {
+    assertUploadIsAllowed(request.file);
+    const persisted = await persistImportUpload(request.file);
+
+    const item = await prisma.importDocument.create({
+      data: {
+        originalFilename: request.file.originalname,
+        sourcePath: persisted.sourcePath,
+        mimeType: request.file.mimetype,
+        fileSize: request.file.size,
+        status: "PENDING",
+        ocrStatus: "PENDING",
+        errorMessage: null,
+      },
+    });
+
+    await analyzeImportDocument({
+      id: item.id,
+      sourcePath: persisted.sourcePath,
+      mimeType: request.file.mimetype,
+      originalFilename: request.file.originalname,
+    });
+
+    await writeAuditLog({
+      entityType: "import-document",
+      entityId: item.id,
+      action: "upload",
+      ...auditActorFromRequest(request),
+      newValue: {
+        originalFilename: request.file.originalname,
+        mimeType: request.file.mimetype,
+        fileSize: request.file.size,
+      },
+    });
+
+    return response.status(201).json({ id: item.id });
+  } catch (error) {
+    await fs.rm(request.file.path, { force: true }).catch(() => undefined);
+    throw error;
+  }
 });
 
 importsRouter.delete("/:id", async (request, response) => {

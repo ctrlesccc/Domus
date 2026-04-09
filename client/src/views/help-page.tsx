@@ -34,7 +34,7 @@ const modules = [
   {
     title: "Import",
     description:
-      "Bestanden die in de importmap worden geplaatst verschijnen automatisch als concept in de intakequeue. Daar controleer en verrijk je de metadata voordat ze definitief worden opgenomen.",
+      "Bestanden die in de importmap worden geplaatst of direct naar de queue worden gesleept verschijnen als concept in de intakequeue. Daar controleer en verrijk je de metadata voordat ze definitief worden opgenomen.",
   },
   {
     title: "Auditlog",
@@ -45,6 +45,7 @@ const modules = [
 
 const importFlow = [
   "Plaats bestanden buiten de app in de bewaakte importmap.",
+  "Of sleep documenten direct naar de queue in het importscherm om dezelfde intakeflow meteen vanuit de app te starten.",
   "DOMUS ontdekt nieuwe bestanden automatisch en zet ze in de importqueue als draft.",
   "OCR en tekstanalyse proberen titel, documentsoort, contact, data, dossier en notities al vooraf in te vullen.",
   "In de intake controleer je preview, confidence en waarschuwingen en vul je alleen aan wat nog ontbreekt.",
@@ -159,6 +160,11 @@ export function HelpPage() {
           <p className="mt-4 text-sm leading-7 text-stone-700">
             Nieuwe importdocumenten worden geanalyseerd met tekstextractie en OCR. DOMUS probeert daarbij onder
             meer titel, documentsoort, contact, documentdatum, vervaldatum, dossier en notities alvast te herkennen.
+          </p>
+          <p className="mt-4 text-sm leading-7 text-stone-700">
+            Dat geldt zowel voor documenten uit de bewaakte importmap als voor bestanden die je rechtstreeks naar
+            de queue sleept. In beide gevallen wordt het formulier voor `Nieuw document` alvast zo volledig mogelijk
+            vooringevuld.
           </p>
           <p className="mt-4 text-sm leading-7 text-stone-700">
             De intake toont confidence-scores en waarschuwingen, zodat je snel ziet welke velden betrouwbaar zijn

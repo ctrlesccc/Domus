@@ -2,6 +2,15 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.7.1] - 2026-04-15
+
+### Gewijzigd
+- Grote introductiekaart bovenaan het dashboard verwijderd zodat de pagina compacter en directer start.
+- Waarschuwingsblokken `Signalen`, `Aandacht` en `Datakwaliteit` op het dashboard vereenvoudigd door het verloop te verwijderen.
+- Tabelkop op zakelijke en persoonlijke contacten gecorrigeerd zodat de header niet meer over de eerste regel schuift.
+- Dossierkaarten voor documenten, verplichtingen en contacten compacter gemaakt zodat meer items tegelijk zichtbaar zijn.
+- Applicatieversie bijgewerkt naar `1.7.1`.
+
 ## [1.7.0] - 2026-04-15
 
 ### Gewijzigd

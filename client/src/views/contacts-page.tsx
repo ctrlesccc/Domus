@@ -151,7 +151,7 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
           {items.length ? (
             <div className="mt-5 overflow-x-auto">
               <table className="app-table min-w-full text-left text-sm">
-                <thead className="sticky top-[7.75rem] z-10 bg-[rgba(249,245,238,0.96)] text-stone-500 backdrop-blur-md">
+                <thead className="bg-sand-50/90 text-stone-500">
                   <tr>
                     <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("name")} type="button">Naam</button></th>
                     <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("type")} type="button">Soort</button></th>

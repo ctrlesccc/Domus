@@ -42,35 +42,6 @@ export function DashboardPage() {
         description="Zie in een oogopslag welke documenten, contracten en vaste lasten aandacht nodig hebben."
       />
 
-      <section className="rounded-[1.6rem] bg-gradient-to-br from-pine-700 via-pine-700 to-pine-600 px-6 py-6 text-white shadow-[0_18px_40px_rgba(46,71,66,0.18)]">
-        <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr] xl:items-end">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">Vandaag</div>
-            <h3 className="mt-2 text-2xl font-semibold tracking-tight">Waar nu de meeste aandacht zit</h3>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/78">
-              Gebruik dit overzicht als startpunt voor documenten die verlopen, contracten die aflopen en nieuwe importitems die nog intake nodig hebben.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 ring-1 ring-white/10">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Verloopt snel</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight">{data.documentsExpiringSoon.length}</div>
-              <div className="mt-2 text-sm text-white/72">documenten binnen 30 dagen</div>
-            </div>
-            <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 ring-1 ring-white/10">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Loopt af</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight">{data.obligationsEndingSoon.length}</div>
-              <div className="mt-2 text-sm text-white/72">verplichtingen met einddatum</div>
-            </div>
-            <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 ring-1 ring-white/10">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Import</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight">{data.stats.importQueueCount}</div>
-              <div className="mt-2 text-sm text-white/72">items in behandeling</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 2xl:grid-cols-8">
         {[
           ["Documenten", data.stats.documentCount],
@@ -300,7 +271,7 @@ function DashboardSection({
 }) {
   const toneClass =
     accent === "warning"
-      ? "bg-gradient-to-br from-amber-50/92 via-white/84 to-white/78 ring-amber-100/90"
+      ? "bg-white/84 ring-amber-100/90"
       : accent === "action"
         ? "bg-gradient-to-br from-pine-50/88 via-white/86 to-white/78 ring-pine-100/80"
         : "bg-white/84 ring-white/70";

@@ -122,10 +122,10 @@ export function DossiersPage() {
             >
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Documenten</div>
-                <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                <div className="mt-3 max-h-[28rem] space-y-2.5 overflow-y-auto pr-1">
                   {dossier.documents.length ? dossier.documents.map((item) => (
                     <div
-                      className="rounded-2xl bg-white/90 px-4 py-3 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
+                      className="rounded-[1.35rem] bg-white/90 px-3.5 py-2.5 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
                       draggable
                       key={item.id}
                       onDragStart={(event) => {
@@ -144,10 +144,10 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-2 flex items-center justify-end gap-3 text-stone-400">::</div>
+                      <div className="mb-1.5 flex items-center justify-end gap-3 text-xs text-stone-400">::</div>
                       <Link className="block" to={`/documents/${item.id}`}>
-                        <div className="font-medium text-ink-900">{item.title}</div>
-                        <div className="mt-1 text-sm text-stone-500">{item.documentType.name} · {formatDate(item.expiryDate || item.documentDate)}</div>
+                        <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.title}</div>
+                        <div className="mt-0.5 text-sm text-stone-500">{item.documentType.name} · {formatDate(item.expiryDate || item.documentDate)}</div>
                       </Link>
                     </div>
                   )) : <p className="text-sm text-stone-500">Geen documenten in dit dossier.</p>}
@@ -156,10 +156,10 @@ export function DossiersPage() {
 
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Verplichtingen</div>
-                <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                <div className="mt-3 max-h-[28rem] space-y-2.5 overflow-y-auto pr-1">
                   {dossier.obligations.length ? dossier.obligations.map((item) => (
                     <div
-                      className="rounded-2xl bg-white/90 px-4 py-3 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
+                      className="rounded-[1.35rem] bg-white/90 px-3.5 py-2.5 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
                       draggable
                       key={item.id}
                       onDragStart={(event) => {
@@ -178,10 +178,10 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-2 flex items-center justify-end gap-3 text-stone-400">::</div>
+                      <div className="mb-1.5 flex items-center justify-end gap-3 text-xs text-stone-400">::</div>
                       <Link className="block" to={`/obligations/${item.id}`}>
-                        <div className="font-medium text-ink-900">{item.title}</div>
-                        <div className="mt-1 text-sm text-stone-500">{item.obligationType.name} · {formatCurrency(item.amount, item.currency)}</div>
+                        <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.title}</div>
+                        <div className="mt-0.5 text-sm text-stone-500">{item.obligationType.name} · {formatCurrency(item.amount, item.currency)}</div>
                       </Link>
                     </div>
                   )) : <p className="text-sm text-stone-500">Geen verplichtingen in dit dossier.</p>}
@@ -190,10 +190,10 @@ export function DossiersPage() {
 
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Contacten</div>
-                <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                <div className="mt-3 max-h-[28rem] space-y-2.5 overflow-y-auto pr-1">
                   {dossier.contacts.length ? dossier.contacts.map((item) => (
                     <div
-                      className="rounded-2xl bg-white/90 px-4 py-3 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
+                      className="rounded-[1.35rem] bg-white/90 px-3.5 py-2.5 shadow-[0_8px_18px_rgba(29,28,23,0.04)]"
                       draggable
                       key={item.id}
                       onDragStart={(event) => {
@@ -212,10 +212,10 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-2 flex items-center justify-end gap-3 text-stone-400">::</div>
+                      <div className="mb-1.5 flex items-center justify-end gap-3 text-xs text-stone-400">::</div>
                       <Link className="block" to={item.kind === "PERSONAL" ? `/personal-contacts/${item.id}` : `/contacts/${item.id}`}>
-                        <div className="font-medium text-ink-900">{item.name}</div>
-                        <div className="mt-1 text-sm text-stone-500">{item.contactType.name} · {item.city || item.email || "Geen extra gegevens"}</div>
+                        <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.name}</div>
+                        <div className="mt-0.5 text-sm text-stone-500">{item.contactType.name} · {item.city || item.email || "Geen extra gegevens"}</div>
                       </Link>
                     </div>
                   )) : <p className="text-sm text-stone-500">Geen contacten in dit dossier.</p>}

@@ -152,6 +152,28 @@ export function ImportsPage() {
     setIsOcrTextExpanded(false);
   }, [selectedItem]);
 
+  useEffect(() => {
+    if (!form.contactId || form.dossierTopic) {
+      return;
+    }
+
+    const selectedContact = contacts.find((item) => String(item.id) === form.contactId);
+    if (!selectedContact?.dossierTopic) {
+      return;
+    }
+
+    setForm((current) => {
+      if (current.contactId !== form.contactId || current.dossierTopic) {
+        return current;
+      }
+
+      return {
+        ...current,
+        dossierTopic: selectedContact.dossierTopic,
+      };
+    });
+  }, [contacts, form.contactId, form.dossierTopic]);
+
   return (
     <>
       <PageHeader
@@ -482,7 +504,19 @@ export function ImportsPage() {
                 </div>
                 <div>
                   <label className="app-label">Primair contact</label>
-                  <select className="app-select" value={form.contactId} onChange={(event) => setForm({ ...form, contactId: event.target.value })}>
+                  <select
+                    className="app-select"
+                    value={form.contactId}
+                    onChange={(event) => {
+                      const nextContactId = event.target.value;
+                      const selectedContact = contacts.find((item) => String(item.id) === nextContactId);
+                      setForm({
+                        ...form,
+                        contactId: nextContactId,
+                        dossierTopic: selectedContact?.dossierTopic || "",
+                      });
+                    }}
+                  >
                     <option value="">Niet gekoppeld</option>
                     {contacts.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -533,7 +567,7 @@ export function ImportsPage() {
                   type="button"
                 >
                   <span className="app-label mb-0">Gekoppelde verplichtingen</span>
-                  <span className="text-sm text-stone-500">{isObligationsExpanded ? "Inklappen" : "Uitklappen"}</span>
+                  <span className="shrink-0 text-lg leading-none text-stone-400">{isObligationsExpanded ? "-" : "+"}</span>
                 </button>
                 {isObligationsExpanded ? (
                   <div className="mt-3 grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
@@ -571,7 +605,7 @@ export function ImportsPage() {
                     type="button"
                   >
                     <span className="app-label mb-0">OCR-tekst</span>
-                    <span className="text-sm text-stone-500">{isOcrTextExpanded ? "Inklappen" : "Uitklappen"}</span>
+                    <span className="shrink-0 text-lg leading-none text-stone-400">{isOcrTextExpanded ? "-" : "+"}</span>
                   </button>
                   {isOcrTextExpanded ? (
                     <div className="mt-3 max-h-56 overflow-y-auto rounded-2xl bg-sand-50 px-4 py-4 text-sm leading-6 text-stone-600">

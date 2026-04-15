@@ -144,7 +144,6 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-1.5 flex items-center justify-end gap-3 text-xs text-stone-400">::</div>
                       <Link className="block" to={`/documents/${item.id}`}>
                         <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.title}</div>
                         <div className="mt-0.5 text-sm text-stone-500">{item.documentType.name} · {formatDate(item.expiryDate || item.documentDate)}</div>
@@ -178,7 +177,6 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-1.5 flex items-center justify-end gap-3 text-xs text-stone-400">::</div>
                       <Link className="block" to={`/obligations/${item.id}`}>
                         <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.title}</div>
                         <div className="mt-0.5 text-sm text-stone-500">{item.obligationType.name} · {formatCurrency(item.amount, item.currency)}</div>
@@ -212,7 +210,6 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <div className="mb-1.5 flex items-center justify-end gap-3 text-xs text-stone-400">::</div>
                       <Link className="block" to={item.kind === "PERSONAL" ? `/personal-contacts/${item.id}` : `/contacts/${item.id}`}>
                         <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.name}</div>
                         <div className="mt-0.5 text-sm text-stone-500">{item.contactType.name} · {item.city || item.email || "Geen extra gegevens"}</div>

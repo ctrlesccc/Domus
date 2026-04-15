@@ -2,6 +2,13 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.7.2] - 2026-04-15
+
+### Gewijzigd
+- Dossiers tonen de kolommen nu in de volgorde `Contacten`, `Documenten`, `Verplichtingen`.
+- Een klik op een contact in dossiers opent niet langer direct de contactkaart, maar filtert documenten en verplichtingen binnen dat dossier op het geselecteerde contact.
+- Applicatieversie bijgewerkt naar `1.7.2`.
+
 ## [1.7.1] - 2026-04-15
 
 ### Gewijzigd

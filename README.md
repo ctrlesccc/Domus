@@ -2,7 +2,7 @@
 
 DOMUS is a self-hosted household administration app for managing documents, contacts, personal contacts, obligations, dashboard signals, and reference data.
 
-Recent updates also improved the import intake: OCR now runs in a background queue, the import screen can trigger re-analysis, and the dashboard/import UI gives clearer live feedback while suggestions are being prepared.
+Recent updates improved both intake and day-to-day usability: OCR still runs in a background queue, the import screen supports queue-wide re-analysis and calmer collapsible panels, dossiers sort documents by document date, and settings/forms/lists now use a more compact and consistent interface.
 
 ## Stack
 

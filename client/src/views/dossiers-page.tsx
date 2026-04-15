@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { formatCurrency, formatDate } from "../lib/format";
 import type { DossierOverview } from "../types";
+import { CollapsibleSection } from "../ui/collapsible-section";
 import { PageHeader } from "../ui/page-header";
 
 type DragItem = {
@@ -101,31 +102,24 @@ export function DossiersPage() {
               }
             }}
           >
-            <button
-              className="flex w-full flex-col gap-2 text-left md:flex-row md:items-end md:justify-between"
-              onClick={() =>
+            <CollapsibleSection
+              bodyClassName="mt-5 grid gap-4 xl:grid-cols-3"
+              className=""
+              headerClassName="bg-transparent px-0 py-0 hover:bg-transparent"
+              isOpen={!collapsedDossiers.includes(dossier.key)}
+              onToggle={() =>
                 setCollapsedDossiers((current) =>
                   current.includes(dossier.key) ? current.filter((key) => key !== dossier.key) : [...current, dossier.key],
                 )
               }
-              type="button"
-            >
-              <div>
-                <h3 className="app-section-title">{dossier.title}</h3>
-              </div>
-              <div className="flex items-center justify-between gap-3 md:text-right text-sm text-stone-500">
+              summary={
                 <div>
                   <div>{dossier.summary}</div>
                   {dropTarget === dossier.key ? <div className="mt-1 text-xs">Laat hier los om toe te wijzen</div> : null}
                 </div>
-                <div className="shrink-0 text-lg leading-none text-stone-400">
-                  {collapsedDossiers.includes(dossier.key) ? "+" : "-"}
-                </div>
-              </div>
-            </button>
-
-            {!collapsedDossiers.includes(dossier.key) ? (
-              <div className="mt-5 grid gap-4 xl:grid-cols-3">
+              }
+              title={<span className="app-section-title text-ink-900">{dossier.title}</span>}
+            >
               <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
                 <div className="text-sm font-semibold text-stone-700">Documenten</div>
                 <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
@@ -227,8 +221,7 @@ export function DossiersPage() {
                   )) : <p className="text-sm text-stone-500">Geen contacten in dit dossier.</p>}
                 </div>
               </div>
-            </div>
-            ) : null}
+            </CollapsibleSection>
           </div>
         ))}
       </section>

@@ -148,6 +148,8 @@ Belangrijke UX-kenmerken:
 - rustige kleurstelling met zand-, groen- en inkttinten
 - compacte en comfortabele density modes
 - dashboardgerichte informatiearchitectuur
+- gedeeld inklapgedrag via een centrale collapsible component
+- sticky filters en sticky lijstkoppen op lange beheerpagina's
 
 ## 5. Backendontwerp
 
@@ -284,7 +286,7 @@ Levert tijdlijnitems uit verschillende domeinen.
 
 [dossiers.ts](c:/Projects/Domus/server/src/routes/dossiers.ts)
 
-Groepeert documenten, verplichtingen en contacten per dossieronderwerp.
+Groepeert documenten, verplichtingen en contacten per dossieronderwerp en sorteert dossierdocumenten primair op `documentDate` met `createdAt` als fallback.
 
 ### Imports
 
@@ -456,6 +458,8 @@ Resultaat:
 - draftdossier
 - draftnotities
 - confidence, waarschuwingen en verklarende signalen voor de intake-UI
+
+In de intake-UI worden langere hulponderdelen zoals OCR-tekst en gekoppelde verplichtingen compact via dezelfde collapsible component aangeboden.
 
 ## 8.3 Finalisatie
 

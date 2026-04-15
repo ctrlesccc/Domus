@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "../ui/page-header";
 import { api } from "../lib/api";
@@ -42,6 +42,35 @@ export function DashboardPage() {
         description="Zie in een oogopslag welke documenten, contracten en vaste lasten aandacht nodig hebben."
       />
 
+      <section className="rounded-[1.6rem] bg-gradient-to-br from-pine-700 via-pine-700 to-pine-600 px-6 py-6 text-white shadow-[0_18px_40px_rgba(46,71,66,0.18)]">
+        <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr] xl:items-end">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">Vandaag</div>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight">Waar nu de meeste aandacht zit</h3>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/78">
+              Gebruik dit overzicht als startpunt voor documenten die verlopen, contracten die aflopen en nieuwe importitems die nog intake nodig hebben.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 ring-1 ring-white/10">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Verloopt snel</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight">{data.documentsExpiringSoon.length}</div>
+              <div className="mt-2 text-sm text-white/72">documenten binnen 30 dagen</div>
+            </div>
+            <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 ring-1 ring-white/10">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Loopt af</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight">{data.obligationsEndingSoon.length}</div>
+              <div className="mt-2 text-sm text-white/72">verplichtingen met einddatum</div>
+            </div>
+            <div className="rounded-[1.25rem] bg-white/10 px-4 py-4 ring-1 ring-white/10">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Import</div>
+              <div className="mt-3 text-3xl font-semibold tracking-tight">{data.stats.importQueueCount}</div>
+              <div className="mt-2 text-sm text-white/72">items in behandeling</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 2xl:grid-cols-8">
         {[
           ["Documenten", data.stats.documentCount],
@@ -54,7 +83,7 @@ export function DashboardPage() {
           ["Per jaar", formatCurrency(data.costSummary.yearly)],
         ].map(([label, value], index) => (
           <Link
-            className="app-card flex min-h-24 flex-col justify-between px-4 py-4 transition hover:-translate-y-0.5 hover:bg-white sm:px-5"
+            className="app-card flex min-h-24 flex-col justify-between border border-transparent px-4 py-4 transition hover:-translate-y-0.5 hover:border-sand-200 hover:bg-white sm:px-5"
             key={label}
             to={dashboardStatCards[index].to}
           >
@@ -76,11 +105,11 @@ export function DashboardPage() {
       </section>
 
       <section className="grid gap-3 xl:grid-cols-[1fr_1fr]">
-        <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div>
-            <div className="app-section-kicker">Signalen</div>
-            <h3 className="app-section-title mt-2">Documenten die bijna verlopen</h3>
-          </div>
+        <DashboardSection
+          accent="warning"
+          eyebrow="Signalen"
+          title="Documenten die bijna verlopen"
+        >
           <div className="mt-4 flex-1 space-y-3">
             {data.documentsExpiringSoon.length ? (
               data.documentsExpiringSoon.map((item) => (
@@ -95,13 +124,13 @@ export function DashboardPage() {
               <p className="text-sm text-stone-500">Geen documenten met een vervaldatum binnen 30 dagen.</p>
             )}
           </div>
-        </div>
+        </DashboardSection>
 
-        <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div>
-            <div className="app-section-kicker">Aandacht</div>
-            <h3 className="app-section-title mt-2">Aflopende verplichtingen</h3>
-          </div>
+        <DashboardSection
+          accent="warning"
+          eyebrow="Aandacht"
+          title="Aflopende verplichtingen"
+        >
           <div className="mt-4 flex-1 space-y-3">
             {data.obligationsEndingSoon.length ? (
               data.obligationsEndingSoon.map((item) => (
@@ -116,13 +145,11 @@ export function DashboardPage() {
               <p className="text-sm text-stone-500">Geen contracten die binnenkort aflopen.</p>
             )}
           </div>
-        </div>
+        </DashboardSection>
       </section>
 
       <section className="grid gap-3 xl:grid-cols-[1.3fr_0.7fr]">
-        <div className="app-card h-full px-6 py-5">
-          <div className="app-section-kicker">Groepering</div>
-          <h3 className="app-section-title mt-2">Polissen per verzekeraar</h3>
+        <DashboardSection accent="info" eyebrow="Groepering" title="Polissen per verzekeraar">
           {data.policyGroups.length ? (
             <div className="mt-5 space-y-4">
               {data.policyGroups.map((group) => (
@@ -155,12 +182,10 @@ export function DashboardPage() {
           ) : (
             <p className="mt-4 text-sm text-stone-500">Nog geen actieve polissen gevonden.</p>
           )}
-        </div>
+        </DashboardSection>
 
         <div className="grid gap-3">
-          <div className="app-card h-full px-6 py-5">
-            <div className="app-section-kicker">Datakwaliteit</div>
-            <h3 className="app-section-title mt-2">Mist gegevens</h3>
+          <DashboardSection accent="warning" eyebrow="Datakwaliteit" title="Mist gegevens">
             <div className="mt-4 space-y-5">
               <div>
                 <div className="text-sm font-semibold text-stone-700">Polissen zonder documentdatum</div>
@@ -192,13 +217,9 @@ export function DashboardPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </DashboardSection>
 
-          <div className="app-card h-full px-6 py-5">
-            <div>
-              <div className="app-section-kicker">Belangrijk</div>
-              <h3 className="app-section-title mt-2">Belangrijke documenten</h3>
-            </div>
+          <DashboardSection accent="action" eyebrow="Belangrijk" title="Belangrijke documenten">
             <div className="mt-4 space-y-2">
               {data.importantDocuments.length ? (
                 data.importantDocuments.map((item) => (
@@ -218,14 +239,12 @@ export function DashboardPage() {
                 <p className="text-sm text-stone-500">Er zijn nog geen belangrijke documenten gemarkeerd.</p>
               )}
             </div>
-          </div>
+          </DashboardSection>
         </div>
       </section>
 
       <section className="grid gap-3 xl:grid-cols-2">
-        <div className="app-card px-6 py-5">
-          <div className="app-section-kicker">Verdeling</div>
-          <h3 className="app-section-title mt-2">Kosten per maand per type</h3>
+        <DashboardSection accent="info" eyebrow="Verdeling" title="Kosten per maand per type">
           {data.annualCostByType.length ? (
             <CostBreakdownChart
               expandedTypes={expandedTypes}
@@ -237,13 +256,9 @@ export function DashboardPage() {
           ) : (
             <p className="mt-4 text-sm text-stone-500">Nog geen actieve verplichtingen voor kostenanalyse.</p>
           )}
-        </div>
+        </DashboardSection>
 
-        <div className="app-card flex min-h-52 flex-col px-6 py-5">
-          <div>
-            <div className="app-section-kicker">Planning</div>
-            <h3 className="app-section-title mt-2">Komende afschrijvingen ({data.planningWindowDays} dagen)</h3>
-          </div>
+        <DashboardSection accent="action" eyebrow="Planning" title={`Komende afschrijvingen (${data.planningWindowDays} dagen)`}>
           <div className="mt-4 flex-1">
             {data.upcomingPlannedCharges.length ? (
               <PlanningBreakdown items={data.upcomingPlannedCharges} />
@@ -251,14 +266,10 @@ export function DashboardPage() {
               <p className="text-sm text-stone-500">Geen geplande afschrijvingen in de komende {data.planningWindowDays} dagen.</p>
             )}
           </div>
-        </div>
+        </DashboardSection>
       </section>
 
-      <section className="app-card px-6 py-5">
-        <div>
-          <div className="app-section-kicker">Import</div>
-          <h3 className="app-section-title mt-2">Nieuwe importitems</h3>
-        </div>
+      <DashboardSection accent="action" eyebrow="Import" title="Nieuwe importitems">
         <div className="mt-4 flex-1 space-y-3">
           {data.importQueue.length ? (
             data.importQueue.map((item) => (
@@ -271,8 +282,44 @@ export function DashboardPage() {
             <p className="text-sm text-stone-500">Geen nieuwe bestanden in de importmap.</p>
           )}
         </div>
-      </section>
+      </DashboardSection>
     </>
+  );
+}
+
+function DashboardSection({
+  accent,
+  eyebrow,
+  title,
+  children,
+}: {
+  accent: "info" | "action" | "warning";
+  eyebrow: string;
+  title: string;
+  children: ReactNode;
+}) {
+  const toneClass =
+    accent === "warning"
+      ? "bg-gradient-to-br from-amber-50/92 via-white/84 to-white/78 ring-amber-100/90"
+      : accent === "action"
+        ? "bg-gradient-to-br from-pine-50/88 via-white/86 to-white/78 ring-pine-100/80"
+        : "bg-white/84 ring-white/70";
+
+  const eyebrowClass =
+    accent === "warning"
+      ? "text-amber-700"
+      : accent === "action"
+        ? "text-pine-700"
+        : "text-stone-500";
+
+  return (
+    <section className={`app-card flex min-h-52 flex-col px-6 py-5 ring-1 ${toneClass}`}>
+      <div>
+        <div className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${eyebrowClass}`}>{eyebrow}</div>
+        <h3 className="app-section-title mt-2">{title}</h3>
+      </div>
+      {children}
+    </section>
   );
 }
 

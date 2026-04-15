@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
 import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
 import type { AppSetting, Contact, ImportItem, Obligation, ReferenceItem } from "../types";
+import { CollapsibleSection } from "../ui/collapsible-section";
 import { PageHeader } from "../ui/page-header";
 
 const emptyForm = {
@@ -561,16 +562,14 @@ export function ImportsPage() {
               </div>
 
               <div>
-                <button
-                  className="flex w-full items-center justify-between gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-left"
-                  onClick={() => setIsObligationsExpanded((current) => !current)}
-                  type="button"
+                <CollapsibleSection
+                  bodyClassName="mt-3 grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2"
+                  isOpen={isObligationsExpanded}
+                  onToggle={() => setIsObligationsExpanded((current) => !current)}
+                  summary={form.obligationIds.length ? `${form.obligationIds.length} gekoppeld` : "Geen selectie"}
+                  title="Gekoppelde verplichtingen"
                 >
-                  <span className="app-label mb-0">Gekoppelde verplichtingen</span>
-                  <span className="shrink-0 text-lg leading-none text-stone-400">{isObligationsExpanded ? "-" : "+"}</span>
-                </button>
-                {isObligationsExpanded ? (
-                  <div className="mt-3 grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
+                  <>
                     {obligations.map((item) => (
                       <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
                         <input
@@ -588,8 +587,8 @@ export function ImportsPage() {
                         {item.title}
                       </label>
                     ))}
-                  </div>
-                ) : null}
+                  </>
+                </CollapsibleSection>
               </div>
 
               <div>
@@ -599,19 +598,17 @@ export function ImportsPage() {
 
               {selectedItem.ocrText ? (
                 <div>
-                  <button
-                    className="flex w-full items-center justify-between gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-left"
-                    onClick={() => setIsOcrTextExpanded((current) => !current)}
-                    type="button"
+                  <CollapsibleSection
+                    bodyClassName="mt-3 max-h-56 overflow-y-auto rounded-2xl bg-sand-50 px-4 py-4 text-sm leading-6 text-stone-600"
+                    isOpen={isOcrTextExpanded}
+                    onToggle={() => setIsOcrTextExpanded((current) => !current)}
+                    summary={selectedItem.ocrText.length > 120 ? `${selectedItem.ocrText.length} tekens` : "Bekijken"}
+                    title="OCR-tekst"
                   >
-                    <span className="app-label mb-0">OCR-tekst</span>
-                    <span className="shrink-0 text-lg leading-none text-stone-400">{isOcrTextExpanded ? "-" : "+"}</span>
-                  </button>
-                  {isOcrTextExpanded ? (
-                    <div className="mt-3 max-h-56 overflow-y-auto rounded-2xl bg-sand-50 px-4 py-4 text-sm leading-6 text-stone-600">
+                    <>
                       {selectedItem.ocrText}
-                    </div>
-                  ) : null}
+                    </>
+                  </CollapsibleSection>
                 </div>
               ) : null}
 

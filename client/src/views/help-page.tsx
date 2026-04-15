@@ -4,12 +4,12 @@ const modules = [
   {
     title: "Dashboard",
     description:
-      "Het dashboard bundelt signalen, belangrijke documenten, komende afschrijvingen, kostenverdeling, importwachtrij en datakwaliteit in één werkoverzicht. Je ziet direct welke documenten of verplichtingen aandacht nodig hebben.",
+      "Het dashboard bundelt signalen, belangrijke documenten, komende afschrijvingen, kostenverdeling, importwachtrij en datakwaliteit in één werkoverzicht. De opbouw benadrukt nu duidelijker wat informatie is, wat actie vraagt en wat direct aandacht nodig heeft.",
   },
   {
     title: "Documenten",
     description:
-      "Beheer documenten met preview, versiebeheer, gekoppelde contacten, verplichtingen, dossierindeling, statusbewaking, belangrijke markering en snelle filtering. Nieuwe versies blijven netjes gegroepeerd.",
+      "Beheer documenten met preview, versiebeheer, gekoppelde contacten, verplichtingen, dossierindeling, statusbewaking, belangrijke markering en snelle filtering. Filters en kopregels blijven zichtbaar tijdens scrollen en nieuwe versies blijven netjes gegroepeerd.",
   },
   {
     title: "Contacten",
@@ -19,7 +19,7 @@ const modules = [
   {
     title: "Verplichtingen",
     description:
-      "Leg contracten, abonnementen, polissen en andere vaste lasten vast met bedrag, frequentie, betaalwijze, evaluatiedatum, herinnering, einddatum en geplande afschrijvingsdatum zonder jaar.",
+      "Leg contracten, abonnementen, polissen en andere vaste lasten vast met bedrag, frequentie, betaalwijze, evaluatiedatum, herinnering, einddatum en geplande afschrijvingsdatum zonder jaar. Lange formulieren zijn opgesplitst in duidelijke secties.",
   },
   {
     title: "Dossiers",
@@ -29,7 +29,7 @@ const modules = [
   {
     title: "Import",
     description:
-      "Bestanden die in de importmap worden geplaatst of direct naar de queue worden gesleept verschijnen als concept in de intakequeue. Daar controleer en verrijk je de metadata voordat ze definitief worden opgenomen, terwijl OCR op de achtergrond doorwerkt.",
+      "Bestanden die in de importmap worden geplaatst of direct naar de queue worden gesleept verschijnen als concept in de intakequeue. Daar controleer en verrijk je de metadata voordat ze definitief worden opgenomen, terwijl OCR op de achtergrond doorwerkt en extra secties compact ingeklapt kunnen blijven.",
   },
   {
     title: "Auditlog",
@@ -69,7 +69,7 @@ const practicalTips = [
 
 const settingsItems = [
   "Referentietypen beheren voor contacten, documenten en verplichtingen.",
-  "Beheerbare lijsten voor dossiers en betaalwijzen onderhouden.",
+  "Beheerbare lijsten voor dossiers, betaalwijzen, documentsoorten en verplichtingstypen onderhouden.",
   "Back-ups maken van database en documentopslag.",
   "Prullenbak controleren en herstelbare items terugzetten.",
   "Weergavedichtheid kiezen tussen comfort en compact.",
@@ -165,7 +165,8 @@ export function HelpPage() {
           <p className="mt-4 text-sm leading-7 text-stone-700">
             De intake toont confidence-scores, herkenbare referenties en waarschuwingen, zodat je snel ziet welke
             velden betrouwbaar zijn en welke nog handmatige controle nodig hebben. Als OCR vastloopt of te weinig
-            oplevert, kun je vanuit hetzelfde scherm direct een heranalyse starten, ook voor de volledige queue.
+            oplevert, kun je vanuit hetzelfde scherm direct een heranalyse starten, ook voor de volledige queue. De
+            secties voor gekoppelde verplichtingen en OCR-tekst starten compact ingeklapt zodat het scherm rustiger blijft.
           </p>
         </div>
       </section>
@@ -181,7 +182,7 @@ export function HelpPage() {
           </p>
           <p className="mt-4 text-sm leading-7 text-stone-700">
             In de dossierweergave kun je documenten, contacten en verplichtingen direct slepen naar een ander
-            dossier. Daardoor kun je snel herindelen zonder eerst elk item apart te openen.
+            dossier. Dossierblokken starten compact ingeklapt en documenten binnen een dossier worden op documentdatum gesorteerd.
           </p>
         </div>
 
@@ -210,6 +211,10 @@ export function HelpPage() {
               </div>
             ))}
           </div>
+          <p className="mt-4 text-sm leading-7 text-stone-700">
+            Toevoegen in deze beheerlijsten werkt direct door. Daardoor is er geen aparte opslaanstap meer nodig voor
+            eenvoudige lijstwaarden.
+          </p>
         </div>
 
         <div className="app-card px-6 py-6">

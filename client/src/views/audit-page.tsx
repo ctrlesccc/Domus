@@ -44,7 +44,7 @@ export function AuditPage() {
         description="Bekijk welke records zijn aangemaakt, gewijzigd of verwijderd om meer vertrouwen en herstelbaarheid te krijgen."
       />
 
-      <section className="app-card px-6 py-5">
+      <section className="app-card sticky top-5 z-20 px-6 py-5">
         <div className="grid gap-3 md:grid-cols-2">
           <select className="app-select" value={entityType} onChange={(event) => setEntityType(event.target.value)}>
             <option value="">Alle entiteiten</option>
@@ -71,12 +71,16 @@ export function AuditPage() {
       </section>
 
       <section className="app-card px-6 py-5">
-        <div className="app-section-kicker">Logboek</div>
-        <h3 className="app-section-title mt-2">Recente wijzigingen</h3>
+        <div className="sticky top-5 z-10 -mx-6 -mt-5 mb-5 rounded-t-[1.5rem] bg-[rgba(249,245,238,0.92)] px-6 py-5 backdrop-blur-md">
+          <div className="app-section-kicker">Logboek</div>
+          <h3 className="app-section-title mt-2">Recente wijzigingen</h3>
+        </div>
         <div className="mt-5 space-y-7">
           {grouped.map(([day, entries]) => (
             <div key={day}>
-              <div className="text-sm font-semibold uppercase tracking-[0.14em] text-stone-500">{formatDate(day)}</div>
+              <div className="sticky top-[8.75rem] z-[5] inline-flex rounded-full bg-sand-50/95 px-3 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-stone-500 backdrop-blur-md">
+                {formatDate(day)}
+              </div>
               <div className="mt-3 space-y-3">
                 {entries.map((item) => (
                   <div className="rounded-[1.35rem] bg-sand-50/80 px-4 py-4" key={item.id}>

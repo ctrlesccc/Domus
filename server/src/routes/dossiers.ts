@@ -21,6 +21,19 @@ function matchesKeywords(values: Array<string | null | undefined>, keywords: rea
   return keywords.some((keyword) => haystack.includes(keyword));
 }
 
+function sortDocumentsByDocumentDate<T extends { documentDate: Date | null; createdAt: Date }>(items: T[]) {
+  return [...items].sort((left, right) => {
+    const leftDate = left.documentDate?.getTime() ?? 0;
+    const rightDate = right.documentDate?.getTime() ?? 0;
+
+    if (rightDate !== leftDate) {
+      return rightDate - leftDate;
+    }
+
+    return right.createdAt.getTime() - left.createdAt.getTime();
+  });
+}
+
 export const dossiersRouter = Router();
 
 dossiersRouter.use(requireAuth);
@@ -169,7 +182,7 @@ dossiersRouter.get("/", async (_request, response) => {
       key: definition.key,
       title: definition.title,
       summary: `${dossierDocuments.length} documenten · ${dossierObligations.length} verplichtingen · ${dossierContacts.length} contacten`,
-      documents: sortAlphabetically(dossierDocuments, (item) => item.title).map(serializeDocument),
+      documents: sortDocumentsByDocumentDate(dossierDocuments).map(serializeDocument),
       obligations: sortAlphabetically(dossierObligations, (item) => item.title).map(serializeObligation),
       contacts: sortAlphabetically(dossierContacts, (item) => item.name).map(serializeContact),
     };

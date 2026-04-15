@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { formatCurrency, formatDate } from "../lib/format";
 import { defaultDossierOptions, defaultPaymentMethodOptions, dossierSelectOptions, paymentMethodOptions, referenceOptions, sortByLabel } from "../lib/options";
 import type { AppSetting, Contact, DocumentItem, Obligation, ReferenceItem } from "../types";
+import { CollapsibleSection } from "../ui/collapsible-section";
 import { PageHeader } from "../ui/page-header";
 import { EmptyState } from "../ui/empty-state";
 
@@ -50,6 +51,7 @@ export function ObligationsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("title");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [expandedSections, setExpandedSections] = useState<string[]>(["basis", "bedrag"]);
 
   async function load() {
     const [obligations, obligationTypes, fetchedContacts, fetchedDocuments, fetchedSettings] = await Promise.all([
@@ -153,6 +155,10 @@ export function ObligationsPage() {
 
     setSortKey(nextKey);
     setSortDirection("asc");
+  }
+
+  function toggleSection(section: string) {
+    setExpandedSections((current) => (current.includes(section) ? current.filter((item) => item !== section) : [...current, section]));
   }
 
   return (
@@ -268,206 +274,252 @@ export function ObligationsPage() {
               }
             }}
           >
-            <div>
-              <label className="app-label">Titel</label>
-              <input className="app-input" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="app-label">Type verplichting</label>
-                <select className="app-select" required value={form.obligationTypeId} onChange={(event) => setForm({ ...form, obligationTypeId: event.target.value })}>
-                  <option value="">Kies een type</option>
-                  {types.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="app-label">Hoofdcontact</label>
-                <select className="app-select" value={form.contactId} onChange={(event) => setForm({ ...form, contactId: event.target.value })}>
-                  <option value="">Niet gekoppeld</option>
-                  {contacts.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="app-label">Bedrag</label>
-                <input className="app-input" inputMode="decimal" placeholder="0,00" required value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
-              </div>
-              <div>
-                <label className="app-label">Valuta</label>
-                <input className="app-input" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value.toUpperCase() })} />
-              </div>
-              <div>
-                <label className="app-label">Frequentie</label>
-                <select
-                  className="app-select"
-                  value={form.frequency}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      frequency: event.target.value,
-                      plannedChargeMonth:
-                        event.target.value === "YEARLY" || event.target.value === "ONE_TIME"
-                          ? current.plannedChargeMonth
-                          : "",
-                    }))
-                  }
-                >
-                  <option value="MONTHLY">Maandelijks</option>
-                  <option value="QUARTERLY">Per kwartaal</option>
-                  <option value="YEARLY">Jaarlijks</option>
-                  <option value="ONE_TIME">Eenmalig</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="app-label">Startdatum</label>
-                <input className="app-input" type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} />
-              </div>
-              <div>
-                <label className="app-label">Einddatum</label>
-                <input className="app-input" type="date" value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="app-label">Contract- of polisnummer</label>
-                <input className="app-input" value={form.contractNumber} onChange={(event) => setForm({ ...form, contractNumber: event.target.value })} />
-              </div>
-              <div>
-                <label className="app-label">Betaalwijze</label>
-                <select className="app-select" value={form.paymentMethod} onChange={(event) => setForm({ ...form, paymentMethod: event.target.value })}>
-                  <option value="">Niet ingesteld</option>
-                  {paymentMethods.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="app-label">Dossier</label>
-              <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value })}>
-                <option value="">Geen dossier</option>
-                {(dossiers.length ? dossiers : defaultDossierOptions).map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className={`grid gap-4 md:grid-cols-2 ${needsPlannedMonth ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
-              <div>
-                <label className="app-label">Afschrijving dag</label>
-                <select className="app-select" value={form.plannedChargeDay} onChange={(event) => setForm({ ...form, plannedChargeDay: event.target.value })}>
-                  <option value="">Geen planning</option>
-                  {Array.from({ length: 31 }, (_, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      {index + 1}
-                    </option>
-                  ))}
-                </select>
-                {form.frequency === "MONTHLY" ? (
-                  <p className="mt-2 text-xs text-stone-500">Bij maandelijks is alleen de dag nodig voor de planning op het dashboard.</p>
-                ) : null}
-                {usesQuarterPattern ? (
-                  <p className="mt-2 text-xs text-stone-500">Bij per kwartaal gebruikt DOMUS de dag samen met de startdatum als kwartaalritme.</p>
-                ) : null}
-              </div>
-              {needsPlannedMonth ? (
+            <CollapsibleSection
+              bodyClassName="mt-4 space-y-4"
+              isOpen={expandedSections.includes("basis")}
+              onToggle={() => toggleSection("basis")}
+              summary="Titel, type en hoofdcontact"
+              title="Basisgegevens"
+            >
+              <>
                 <div>
-                  <label className="app-label">Afschrijving maand</label>
-                  <select className="app-select" value={form.plannedChargeMonth} onChange={(event) => setForm({ ...form, plannedChargeMonth: event.target.value })}>
-                    <option value="">Geen planning</option>
-                    {Array.from({ length: 12 }, (_, index) => (
-                      <option key={index + 1} value={index + 1}>
-                        {new Date(2000, index, 1).toLocaleString("nl-NL", { month: "long" })}
+                  <label className="app-label">Titel</label>
+                  <input className="app-input" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="app-label">Type verplichting</label>
+                    <select className="app-select" required value={form.obligationTypeId} onChange={(event) => setForm({ ...form, obligationTypeId: event.target.value })}>
+                      <option value="">Kies een type</option>
+                      {types.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="app-label">Hoofdcontact</label>
+                    <select className="app-select" value={form.contactId} onChange={(event) => setForm({ ...form, contactId: event.target.value })}>
+                      <option value="">Niet gekoppeld</option>
+                      {contacts.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="app-label">Contract- of polisnummer</label>
+                    <input className="app-input" value={form.contractNumber} onChange={(event) => setForm({ ...form, contractNumber: event.target.value })} />
+                  </div>
+                  <div>
+                    <label className="app-label">Dossier</label>
+                    <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value })}>
+                      <option value="">Geen dossier</option>
+                      {(dossiers.length ? dossiers : defaultDossierOptions).map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              bodyClassName="mt-4 space-y-4"
+              isOpen={expandedSections.includes("bedrag")}
+              onToggle={() => toggleSection("bedrag")}
+              summary={`${form.amount || "0,00"} ${form.currency}`}
+              title="Bedrag en frequentie"
+            >
+              <>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div>
+                    <label className="app-label">Bedrag</label>
+                    <input className="app-input" inputMode="decimal" placeholder="0,00" required value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
+                  </div>
+                  <div>
+                    <label className="app-label">Valuta</label>
+                    <input className="app-input" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value.toUpperCase() })} />
+                  </div>
+                  <div>
+                    <label className="app-label">Frequentie</label>
+                    <select
+                      className="app-select"
+                      value={form.frequency}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          frequency: event.target.value,
+                          plannedChargeMonth:
+                            event.target.value === "YEARLY" || event.target.value === "ONE_TIME"
+                              ? current.plannedChargeMonth
+                              : "",
+                        }))
+                      }
+                    >
+                      <option value="MONTHLY">Maandelijks</option>
+                      <option value="QUARTERLY">Per kwartaal</option>
+                      <option value="YEARLY">Jaarlijks</option>
+                      <option value="ONE_TIME">Eenmalig</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="app-label">Startdatum</label>
+                    <input className="app-input" type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} />
+                  </div>
+                  <div>
+                    <label className="app-label">Einddatum</label>
+                    <input className="app-input" type="date" value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="app-label">Betaalwijze</label>
+                  <select className="app-select" value={form.paymentMethod} onChange={(event) => setForm({ ...form, paymentMethod: event.target.value })}>
+                    <option value="">Niet ingesteld</option>
+                    {paymentMethods.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
                       </option>
                     ))}
                   </select>
                 </div>
-              ) : null}
-              <div>
-                <label className="app-label">Opzegtermijn (dagen)</label>
-                <input className="app-input" min="0" type="number" value={form.cancellationPeriodDays} onChange={(event) => setForm({ ...form, cancellationPeriodDays: event.target.value })} />
-              </div>
-              <div>
-                <label className="app-label">Herinneringsdatum</label>
-                <input className="app-input" type="date" value={form.reminderDate} onChange={(event) => setForm({ ...form, reminderDate: event.target.value })} />
-              </div>
-              <div>
-                <label className="app-label">Evaluatiedatum</label>
-                <input className="app-input" type="date" value={form.reviewDate} onChange={(event) => setForm({ ...form, reviewDate: event.target.value })} />
-              </div>
-            </div>
+              </>
+            </CollapsibleSection>
 
-            <div>
-              <label className="app-label">Gekoppelde documenten</label>
-              <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
-                {documents.map((item) => (
-                  <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
+            <CollapsibleSection
+              bodyClassName="mt-4 space-y-4"
+              isOpen={expandedSections.includes("planning")}
+              onToggle={() => toggleSection("planning")}
+              summary="Datums en herinneringen"
+              title="Planning en signalering"
+            >
+              <>
+                <div className={`grid gap-4 md:grid-cols-2 ${needsPlannedMonth ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
+                  <div>
+                    <label className="app-label">Afschrijving dag</label>
+                    <select className="app-select" value={form.plannedChargeDay} onChange={(event) => setForm({ ...form, plannedChargeDay: event.target.value })}>
+                      <option value="">Geen planning</option>
+                      {Array.from({ length: 31 }, (_, index) => (
+                        <option key={index + 1} value={index + 1}>
+                          {index + 1}
+                        </option>
+                      ))}
+                    </select>
+                    {form.frequency === "MONTHLY" ? (
+                      <p className="mt-2 text-xs text-stone-500">Bij maandelijks is alleen de dag nodig voor de planning op het dashboard.</p>
+                    ) : null}
+                    {usesQuarterPattern ? (
+                      <p className="mt-2 text-xs text-stone-500">Bij per kwartaal gebruikt DOMUS de dag samen met de startdatum als kwartaalritme.</p>
+                    ) : null}
+                  </div>
+                  {needsPlannedMonth ? (
+                    <div>
+                      <label className="app-label">Afschrijving maand</label>
+                      <select className="app-select" value={form.plannedChargeMonth} onChange={(event) => setForm({ ...form, plannedChargeMonth: event.target.value })}>
+                        <option value="">Geen planning</option>
+                        {Array.from({ length: 12 }, (_, index) => (
+                          <option key={index + 1} value={index + 1}>
+                            {new Date(2000, index, 1).toLocaleString("nl-NL", { month: "long" })}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
+                  <div>
+                    <label className="app-label">Opzegtermijn (dagen)</label>
+                    <input className="app-input" min="0" type="number" value={form.cancellationPeriodDays} onChange={(event) => setForm({ ...form, cancellationPeriodDays: event.target.value })} />
+                  </div>
+                  <div>
+                    <label className="app-label">Herinneringsdatum</label>
+                    <input className="app-input" type="date" value={form.reminderDate} onChange={(event) => setForm({ ...form, reminderDate: event.target.value })} />
+                  </div>
+                  <div>
+                    <label className="app-label">Evaluatiedatum</label>
+                    <input className="app-input" type="date" value={form.reviewDate} onChange={(event) => setForm({ ...form, reviewDate: event.target.value })} />
+                  </div>
+                </div>
+
+                <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 text-sm text-stone-700">
+                  <label className="flex items-center gap-3">
+                    <input checked={form.autoRenew} onChange={(event) => setForm({ ...form, autoRenew: event.target.checked })} type="checkbox" />
+                    Automatische verlenging
+                  </label>
+                  <label className="flex items-center gap-3">
                     <input
-                      checked={form.documentIds.includes(String(item.id))}
-                      onChange={(event) =>
-                        setForm({
-                          ...form,
-                          documentIds: event.target.checked
-                            ? [...form.documentIds, String(item.id)]
-                            : form.documentIds.filter((value) => value !== String(item.id)),
-                        })
-                      }
+                      checked={form.showOnDashboard}
+                      onChange={(event) => setForm({ ...form, showOnDashboard: event.target.checked })}
                       type="checkbox"
                     />
-                    {item.title}
+                    Toon op dashboard
                   </label>
-                ))}
+                </div>
+
+                <div>
+                  <label className="app-label">Status</label>
+                  <select className="app-select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
+                    <option value="ACTIVE">Actief</option>
+                    <option value="ENDED">Beëindigd</option>
+                    <option value="EXPIRED">Verlopen</option>
+                  </select>
+                </div>
+              </>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              bodyClassName="mt-4 space-y-4"
+              isOpen={expandedSections.includes("koppelingen")}
+              onToggle={() => toggleSection("koppelingen")}
+              summary={`${form.documentIds.length} documenten gekoppeld`}
+              title="Koppelingen"
+            >
+              <div>
+                <label className="app-label">Gekoppelde documenten</label>
+                <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
+                  {documents.map((item) => (
+                    <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
+                      <input
+                        checked={form.documentIds.includes(String(item.id))}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            documentIds: event.target.checked
+                              ? [...form.documentIds, String(item.id)]
+                              : form.documentIds.filter((value) => value !== String(item.id)),
+                          })
+                        }
+                        type="checkbox"
+                      />
+                      {item.title}
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            </CollapsibleSection>
 
-            <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 text-sm text-stone-700">
-              <label className="flex items-center gap-3">
-                <input checked={form.autoRenew} onChange={(event) => setForm({ ...form, autoRenew: event.target.checked })} type="checkbox" />
-                Automatische verlenging
-              </label>
-              <label className="flex items-center gap-3">
-                <input
-                  checked={form.showOnDashboard}
-                  onChange={(event) => setForm({ ...form, showOnDashboard: event.target.checked })}
-                  type="checkbox"
-                />
-                Toon op dashboard
-              </label>
-            </div>
-
-            <div>
-              <label className="app-label">Status</label>
-              <select className="app-select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
-                <option value="ACTIVE">Actief</option>
-                <option value="ENDED">Beëindigd</option>
-                <option value="EXPIRED">Verlopen</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="app-label">Notities</label>
-              <textarea className="app-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
-            </div>
+            <CollapsibleSection
+              bodyClassName="mt-4"
+              isOpen={expandedSections.includes("extra")}
+              onToggle={() => toggleSection("extra")}
+              summary={form.notes.trim() ? "Met notities" : "Optioneel"}
+              title="Extra informatie"
+            >
+              <div>
+                <label className="app-label">Notities</label>
+                <textarea className="app-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+              </div>
+            </CollapsibleSection>
 
             <div className="flex flex-wrap gap-3">
               <button className="app-button" disabled={isSaving} type="submit">

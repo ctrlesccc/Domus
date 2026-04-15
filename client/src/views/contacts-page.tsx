@@ -135,7 +135,7 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
 
       <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="app-card px-6 py-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="sticky top-5 z-10 -mx-6 -mt-6 mb-5 flex flex-col gap-4 rounded-t-[1.5rem] bg-[rgba(249,245,238,0.92)] px-6 py-6 backdrop-blur-md md:flex-row md:items-center md:justify-between">
             <div>
               <div className="app-section-kicker">Lijst</div>
               <h3 className="app-section-title mt-2">Overzicht</h3>
@@ -151,7 +151,7 @@ export function ContactsPage({ kind }: { kind: "BUSINESS" | "PERSONAL" }) {
           {items.length ? (
             <div className="mt-5 overflow-x-auto">
               <table className="app-table min-w-full text-left text-sm">
-                <thead className="text-stone-500">
+                <thead className="sticky top-[7.75rem] z-10 bg-[rgba(249,245,238,0.96)] text-stone-500 backdrop-blur-md">
                   <tr>
                     <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("name")} type="button">Naam</button></th>
                     <th className="pr-4"><button className="font-medium" onClick={() => toggleSort("type")} type="button">Soort</button></th>

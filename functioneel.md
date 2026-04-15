@@ -2,7 +2,7 @@
 
 ## 1. Inleiding
 
-DOMUS is een self-hosted webapplicatie voor huishoudelijke administratie. De applicatie brengt documenten, contacten, persoonlijke relaties, contracten, abonnementen, vaste lasten, planning, auditinformatie en documentintake samen in een centrale beheeromgeving.
+DOMUS is een self-hosted webapplicatie voor huishoudelijke administratie. De applicatie brengt documenten, contacten, persoonlijke relaties, contracten, abonnementen, vaste lasten, auditinformatie en documentintake samen in een centrale beheeromgeving.
 
 Het doel van DOMUS is tweeledig:
 
@@ -28,7 +28,7 @@ De applicatie ondersteunt de volgende hoofddoelen:
 - zakelijke en persoonlijke contacten beheren
 - verplichtingen zoals verzekeringen, abonnementen en contracten volgen
 - kosten op maand- en jaarniveau inzichtelijk maken
-- belangrijke data en deadlines bewaken via planning en signalering
+- belangrijke data en deadlines bewaken via dashboardsignalering en documentmetadata
 - documenten, contacten en verplichtingen groeperen per dossier of onderwerp
 - wijzigingen vastleggen in een auditlog
 - nieuwe documenten automatisch laten instromen via een importmap
@@ -171,7 +171,7 @@ Een reguliere gebruiker kan:
 
 - inloggen
 - eigen wachtwoord wijzigen
-- werken met documenten, contacten, verplichtingen, planning en import
+- werken met documenten, contacten, verplichtingen, dashboardsignalering en import
 - auditinformatie inzien voor zover de pagina beschikbaar is
 
 Gebruikersbeheer is voorbehouden aan beheerders.
@@ -220,6 +220,7 @@ De documentenmodule ondersteunt:
 - uploaden van nieuwe documenten
 - beheren van bestaande documenten
 - filteren en zoeken
+- sticky filters en lijstkoppen voor lange overzichten
 - previewen binnen de applicatie
 - openen in nieuw tabblad
 - versiebeheer
@@ -241,6 +242,7 @@ De documenteditor wordt gebruikt voor:
 Hier komen bestand, metadata, relaties en status samen.
 
 De editor bevat ook een checkbox om een document als belangrijk te markeren. Deze markering wordt gebruikt op het dashboard om kritieke documenten snel zichtbaar te maken.
+De editor gebruikt daarnaast inklapbare secties voor basisgegevens, bestand, koppelingen en extra informatie.
 
 ### 6.5 Contacten
 
@@ -275,6 +277,8 @@ Functionaliteit:
 - review- en reminderdata instellen
 - dossieronderwerp toekennen
 
+Het formulier is opgesplitst in compacte secties zodat ook langere invoer op mobiel en kleinere schermen beheersbaar blijft.
+
 ### 6.7 Zoeken
 
 De zoekmodule biedt een centrale zoekfunctie over:
@@ -288,11 +292,11 @@ Doel:
 - snel terugvinden van relevante informatie zonder door meerdere modules te hoeven navigeren
 - direct kunnen doorklikken naar gevonden documenten, contacten en verplichtingen
 
-### 6.8 Jaarplanning
+### 6.8 Signalering
 
-De jaarplanning brengt opvolging en tijdsgebonden administratie samen in één weergave.
+Signalering in DOMUS brengt opvolging en tijdsgebonden administratie samen in dashboardblokken en metadata-gestuurde overzichten.
 
-De planning kan gebeurtenissen tonen zoals:
+Deze signalering gebruikt onder andere:
 
 - documentdatums
 - vervaldatums
@@ -305,7 +309,7 @@ Doel:
 
 - vooruitkijken
 - opvolgmomenten niet missen
-- administratieve spreiding over het jaar inzichtelijk maken
+- belangrijke momenten en ontbrekende gegevens zichtbaar maken
 
 ### 6.9 Dossiers
 
@@ -318,6 +322,7 @@ Per dossier worden samengebracht:
 - relevante contacten
 
 Dit ondersteunt thematisch werken, bijvoorbeeld een volledig overzicht van alle verzekeringsinformatie.
+Dossierblokken starten standaard geminimaliseerd en tonen ook lege dossiers, zodat de volledige structuur zichtbaar blijft.
 
 ### 6.10 Importqueue
 
@@ -329,7 +334,7 @@ Proces:
 2. de applicatie detecteert het bestand
 3. DOMUS maakt een draft-item in de importqueue
 4. OCR en tekstanalyse proberen metadata te herkennen
-5. de gebruiker beoordeelt preview, confidence, verklarende signalen en waarschuwingen
+5. de gebruiker beoordeelt preview, confidence en waarschuwingen
 6. de gebruiker vult ontbrekende gegevens aan
 7. na akkoord wordt het bestand verplaatst naar de documentopslag en als document opgenomen
 
@@ -402,7 +407,9 @@ Doel:
 Bevat algemene configuraties, waaronder:
 
 - weergavedichtheid
-- overige instelbare applicatieparameters
+- beheerbare lijsten voor betaalwijzen en dossiers
+- beheer van documentsoorten en verplichtingstypen
+- dashboardinstellingen zoals het planningvenster
 
 #### Back-ups
 
@@ -430,7 +437,7 @@ Typisch proces:
 3. gebruiker uploadt of importeert documenten
 4. gebruiker koppelt documenten aan relevante contacten en verplichtingen
 5. gebruiker vult ontbrekende data aan
-6. dashboard en planning gaan de nieuwe informatie meenemen
+6. dashboard en signalering gaan de nieuwe informatie meenemen
 
 ### 7.2 Intake van documenten via importmap
 
@@ -447,7 +454,7 @@ Dit proces is gericht op minimale handmatige invoer:
 Gebruikers kunnen DOMUS periodiek gebruiken om:
 
 - het dashboard te controleren
-- de planning te bekijken
+- signalen en aandachtspunten te bekijken
 - ontbrekende gegevens aan te vullen
 - importdrafts af te handelen
 - auditlog te raadplegen
@@ -463,7 +470,7 @@ DOMUS is ontworpen als rustige beheeromgeving met:
 - compacte of comfortabele weergavedichtheid
 - inline previews waar relevant
 - zoek- en filtervelden met rustiger gedrag door vertraagde zoekopdrachten en zichtbare laadstatussen
-- intake met live OCR-status, verklarende suggesties en duidelijkere visuele statuskaarten
+- intake met live OCR-status, compact inklapbare secties en duidelijkere visuele statuskaarten
 
 De app wil vooral praktisch, betrouwbaar en overzichtelijk zijn.
 
@@ -492,4 +499,4 @@ Voor correct gebruik gelden functioneel de volgende randvoorwaarden:
 
 ## 11. Samenvatting
 
-DOMUS is functioneel ontworpen als een samenhangend administratief platform voor huishoudelijk beheer. De applicatie combineert archivering, relatiebeheer, verplichtingenbeheer, planning, importautomatisering en auditcontrole in één omgeving. De kernkracht zit in de onderlinge samenhang tussen documenten, contacten, verplichtingen en onderwerpen, waardoor gebruikers niet alleen informatie opslaan, maar die informatie ook actief kunnen beheren en opvolgen.
+DOMUS is functioneel ontworpen als een samenhangend administratief platform voor huishoudelijk beheer. De applicatie combineert archivering, relatiebeheer, verplichtingenbeheer, signalering, importautomatisering en auditcontrole in één omgeving. De kernkracht zit in de onderlinge samenhang tussen documenten, contacten, verplichtingen en onderwerpen, waardoor gebruikers niet alleen informatie opslaan, maar die informatie ook actief kunnen beheren en opvolgen.

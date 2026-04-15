@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
 import type { AppSetting, Contact, DocumentItem, Obligation, ReferenceItem } from "../types";
+import { CollapsibleSection } from "../ui/collapsible-section";
 import { PageHeader } from "../ui/page-header";
 
 type FormState = {
@@ -49,6 +50,7 @@ export function DocumentEditorPage() {
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<string[]>(["basis", "bestand"]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -147,6 +149,10 @@ export function DocumentEditorPage() {
     }
   }
 
+  function toggleSection(section: string) {
+    setExpandedSections((current) => (current.includes(section) ? current.filter((item) => item !== section) : [...current, section]));
+  }
+
   return (
     <>
       <PageHeader
@@ -158,211 +164,246 @@ export function DocumentEditorPage() {
       {error ? <div className="app-card px-6 py-4 text-red-700">{error}</div> : null}
 
       <form className="app-card space-y-5 px-6 py-6" onSubmit={submit}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-stone-700">Titel</label>
-            <input className="app-input" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-stone-700">Documentsoort</label>
-            <select
-              className="app-select"
-              required
-              value={form.documentTypeId}
-              onChange={(event) => setForm({ ...form, documentTypeId: event.target.value })}
-            >
-              <option value="">Kies een documentsoort</option>
-              {documentTypes.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-stone-700">Primair contact</label>
-            <select className="app-select" value={form.contactId} onChange={(event) => setForm({ ...form, contactId: event.target.value })}>
-              <option value="">Niet gekoppeld</option>
-              {contacts.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-stone-700">Status</label>
-            <select className="app-select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as FormState["status"] })}>
-              <option value="ACTIVE">Actief</option>
-              <option value="EXPIRED">Verlopen</option>
-              <option value="ARCHIVED">Gearchiveerd</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-stone-700">Dossier</label>
-          <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value as FormState["dossierTopic"] })}>
-            <option value="">Geen dossier</option>
-            {dossierSelectOptions(settings).concat(dossierSelectOptions(settings).length ? [] : defaultDossierOptions).map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-stone-700">Vervaldatum</label>
-            <input className="app-input" type="date" value={form.expiryDate} onChange={(event) => setForm({ ...form, expiryDate: event.target.value })} />
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-stone-700">Documentdatum</label>
-            <input className="app-input" type="date" value={form.documentDate} onChange={(event) => setForm({ ...form, documentDate: event.target.value })} />
-          </div>
-        </div>
-
-        <label className="flex items-center gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm text-stone-700">
-          <input
-            checked={form.isImportant}
-            onChange={(event) => setForm({ ...form, isImportant: event.target.checked })}
-            type="checkbox"
-          />
-          Markeer dit document als belangrijk
-        </label>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-stone-700">
-            {isEdit ? "Nieuw bestand uploaden om te vervangen" : "Bestand"}
-          </label>
-          <div
-            className={[
-              "rounded-3xl border-2 border-dashed p-5 transition",
-              isDraggingFile ? "border-pine-700 bg-sand-50" : "border-stone-300 bg-white/80",
-            ].join(" ")}
-            onDragEnter={(event) => {
-              event.preventDefault();
-              setIsDraggingFile(true);
-            }}
-            onDragLeave={(event) => {
-              event.preventDefault();
-              if (event.currentTarget === event.target) {
-                setIsDraggingFile(false);
-              }
-            }}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setIsDraggingFile(true);
-            }}
-            onDrop={(event) => {
-              event.preventDefault();
-              setIsDraggingFile(false);
-              handleSelectedFile(event.dataTransfer.files?.[0] ?? null);
-            }}
-          >
-            <input
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-              className="hidden"
-              onChange={(event) => handleSelectedFile(event.target.files?.[0] ?? null)}
-              ref={fileInputRef}
-              type="file"
-            />
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <CollapsibleSection
+          bodyClassName="mt-4 space-y-4"
+          isOpen={expandedSections.includes("basis")}
+          onToggle={() => toggleSection("basis")}
+          summary="Titel, type, status en datums"
+          title="Basisgegevens"
+        >
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <div className="text-sm font-semibold text-ink-900">Sleep een document hierheen of kies een bestand</div>
-                <p className="mt-1 text-sm text-stone-500">
-                  Ondersteunt PDF, JPG, PNG, WebP, Office-bestanden en tekstbestanden.
-                </p>
-                {file ? (
-                  <p className="mt-3 text-sm font-medium text-pine-700">Geselecteerd: {file.name}</p>
-                ) : existingDocument ? (
-                  <p className="mt-3 text-sm text-stone-500">Huidig bestand: {existingDocument.originalFilename}</p>
-                ) : null}
+                <label className="mb-2 block text-sm font-medium text-stone-700">Titel</label>
+                <input className="app-input" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               </div>
-              <button
-                className="app-button-secondary"
-                onClick={() => fileInputRef.current?.click()}
-                type="button"
-              >
-                Bestand kiezen
-              </button>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">Documentsoort</label>
+                <select
+                  className="app-select"
+                  required
+                  value={form.documentTypeId}
+                  onChange={(event) => setForm({ ...form, documentTypeId: event.target.value })}
+                >
+                  <option value="">Kies een documentsoort</option>
+                  {documentTypes.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-          {existingDocument ? (
-            <p className="mt-2 text-sm text-stone-500">Laat leeg als je het bestaande bestand wilt behouden.</p>
-          ) : null}
-        </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-stone-700">Gekoppelde contacten</label>
-          <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
-            {contacts.map((item) => (
-              <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">Primair contact</label>
+                <select className="app-select" value={form.contactId} onChange={(event) => setForm({ ...form, contactId: event.target.value })}>
+                  <option value="">Niet gekoppeld</option>
+                  {contacts.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">Status</label>
+                <select className="app-select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as FormState["status"] })}>
+                  <option value="ACTIVE">Actief</option>
+                  <option value="EXPIRED">Verlopen</option>
+                  <option value="ARCHIVED">Gearchiveerd</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Dossier</label>
+              <select className="app-select" value={form.dossierTopic} onChange={(event) => setForm({ ...form, dossierTopic: event.target.value as FormState["dossierTopic"] })}>
+                <option value="">Geen dossier</option>
+                {dossierSelectOptions(settings).concat(dossierSelectOptions(settings).length ? [] : defaultDossierOptions).map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">Vervaldatum</label>
+                <input className="app-input" type="date" value={form.expiryDate} onChange={(event) => setForm({ ...form, expiryDate: event.target.value })} />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">Documentdatum</label>
+                <input className="app-input" type="date" value={form.documentDate} onChange={(event) => setForm({ ...form, documentDate: event.target.value })} />
+              </div>
+            </div>
+
+            <label className="flex items-center gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm text-stone-700">
+              <input
+                checked={form.isImportant}
+                onChange={(event) => setForm({ ...form, isImportant: event.target.checked })}
+                type="checkbox"
+              />
+              Markeer dit document als belangrijk
+            </label>
+          </>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          bodyClassName="mt-4"
+          isOpen={expandedSections.includes("bestand")}
+          onToggle={() => toggleSection("bestand")}
+          summary={file ? file.name : existingDocument?.originalFilename ?? "Nog geen bestand"}
+          title={isEdit ? "Bestand vervangen of behouden" : "Bestand uploaden"}
+        >
+          <div>
+            <div
+              className={[
+                "rounded-3xl border-2 border-dashed p-5 transition",
+                isDraggingFile ? "border-pine-700 bg-sand-50" : "border-stone-300 bg-white/80",
+              ].join(" ")}
+              onDragEnter={(event) => {
+                event.preventDefault();
+                setIsDraggingFile(true);
+              }}
+              onDragLeave={(event) => {
+                event.preventDefault();
+                if (event.currentTarget === event.target) {
+                  setIsDraggingFile(false);
+                }
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDraggingFile(true);
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                setIsDraggingFile(false);
+                handleSelectedFile(event.dataTransfer.files?.[0] ?? null);
+              }}
+            >
+              <input
+                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                className="hidden"
+                onChange={(event) => handleSelectedFile(event.target.files?.[0] ?? null)}
+                ref={fileInputRef}
+                type="file"
+              />
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-ink-900">Sleep een document hierheen of kies een bestand</div>
+                  <p className="mt-1 text-sm text-stone-500">
+                    Ondersteunt PDF, JPG, PNG, WebP, Office-bestanden en tekstbestanden.
+                  </p>
+                  {file ? (
+                    <p className="mt-3 text-sm font-medium text-pine-700">Geselecteerd: {file.name}</p>
+                  ) : existingDocument ? (
+                    <p className="mt-3 text-sm text-stone-500">Huidig bestand: {existingDocument.originalFilename}</p>
+                  ) : null}
+                </div>
+                <button
+                  className="app-button-secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                  type="button"
+                >
+                  Bestand kiezen
+                </button>
+              </div>
+            </div>
+            {existingDocument ? (
+              <p className="mt-2 text-sm text-stone-500">Laat leeg als je het bestaande bestand wilt behouden.</p>
+            ) : null}
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          bodyClassName="mt-4 space-y-4"
+          isOpen={expandedSections.includes("koppelingen")}
+          onToggle={() => toggleSection("koppelingen")}
+          summary={`${form.contactIds.length} contacten · ${form.obligationIds.length} verplichtingen`}
+          title="Koppelingen"
+        >
+          <>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Gekoppelde contacten</label>
+              <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
+                {contacts.map((item) => (
+                  <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
+                    <input
+                      checked={form.contactIds.includes(String(item.id))}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          contactIds: event.target.checked
+                            ? [...new Set([...form.contactIds, String(item.id)])]
+                            : form.contactIds.filter((value) => value !== String(item.id)),
+                          contactId:
+                            !event.target.checked && form.contactId === String(item.id)
+                              ? ""
+                              : form.contactId,
+                        })
+                      }
+                      type="checkbox"
+                    />
+                    {item.name}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-2 text-sm text-stone-500">Gebruik het primaire contact voor hoofdweergaven en voeg hier extra koppelingen toe waar nodig.</p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Koppel aan verplichtingen</label>
+              <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
+                {obligations.map((item) => (
+                  <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
+                    <input
+                      checked={form.obligationIds.includes(String(item.id))}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          obligationIds: event.target.checked
+                            ? [...form.obligationIds, String(item.id)]
+                            : form.obligationIds.filter((value) => value !== String(item.id)),
+                        })
+                      }
+                      type="checkbox"
+                    />
+                    {item.title}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          bodyClassName="mt-4 space-y-4"
+          isOpen={expandedSections.includes("extra")}
+          onToggle={() => toggleSection("extra")}
+          summary={form.notes.trim() ? "Met notities" : "Optioneel"}
+          title="Extra informatie"
+        >
+          <>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Notities</label>
+              <textarea className="app-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+            </div>
+
+            {isEdit ? (
+              <label className="flex items-center gap-3 text-sm text-stone-700">
                 <input
-                  checked={form.contactIds.includes(String(item.id))}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      contactIds: event.target.checked
-                        ? [...new Set([...form.contactIds, String(item.id)])]
-                        : form.contactIds.filter((value) => value !== String(item.id)),
-                      contactId:
-                        !event.target.checked && form.contactId === String(item.id)
-                          ? ""
-                          : form.contactId,
-                    })
-                  }
+                  checked={form.createNewVersion}
+                  onChange={(event) => setForm({ ...form, createNewVersion: event.target.checked })}
                   type="checkbox"
                 />
-                {item.name}
+                Maak een nieuwe documentversie aan wanneer je een nieuw bestand uploadt
               </label>
-            ))}
-          </div>
-          <p className="mt-2 text-sm text-stone-500">Gebruik het primaire contact voor hoofdweergaven en voeg hier extra koppelingen toe waar nodig.</p>
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-stone-700">Koppel aan verplichtingen</label>
-          <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
-            {obligations.map((item) => (
-              <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
-                <input
-                  checked={form.obligationIds.includes(String(item.id))}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      obligationIds: event.target.checked
-                        ? [...form.obligationIds, String(item.id)]
-                        : form.obligationIds.filter((value) => value !== String(item.id)),
-                    })
-                  }
-                  type="checkbox"
-                />
-                {item.title}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-stone-700">Notities</label>
-          <textarea className="app-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
-        </div>
-
-        {isEdit ? (
-          <label className="flex items-center gap-3 text-sm text-stone-700">
-            <input
-              checked={form.createNewVersion}
-              onChange={(event) => setForm({ ...form, createNewVersion: event.target.checked })}
-              type="checkbox"
-            />
-            Maak een nieuwe documentversie aan wanneer je een nieuw bestand uploadt
-          </label>
-        ) : null}
+            ) : null}
+          </>
+        </CollapsibleSection>
 
         <div className="flex flex-wrap gap-3">
           <button className="app-button" disabled={isSaving} type="submit">

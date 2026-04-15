@@ -95,7 +95,7 @@ export function DocumentsPage() {
         action={{ label: "Nieuw document", to: "/documents/new" }}
       />
 
-      <section className="app-card px-5 py-5">
+      <section className="app-card sticky top-5 z-20 px-5 py-5">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_220px_220px_190px_auto]">
           <input
             className="app-input"
@@ -145,7 +145,7 @@ export function DocumentsPage() {
         ].join(" ")}
       >
         <div className="app-card min-w-0 px-5 py-5">
-          <div className="flex items-center justify-between gap-3">
+          <div className="sticky top-5 z-10 -mx-5 -mt-5 mb-4 flex items-center justify-between gap-3 rounded-t-[1.5rem] bg-[rgba(249,245,238,0.92)] px-5 py-5 backdrop-blur-md">
             <div>
               <h3 className="text-base font-semibold tracking-tight text-ink-900">Documentlijst</h3>
               <p className="mt-1 text-sm text-stone-500">
@@ -160,7 +160,7 @@ export function DocumentsPage() {
           </div>
 
           {isLoading ? (
-            <div className="mt-4 space-y-2">
+            <div className="space-y-2">
               {[0, 1, 2].map((placeholder) => (
                 <div className="rounded-[1.35rem] bg-white/55 px-4 py-4" key={placeholder}>
                   <div className="h-4 w-2/5 rounded-full bg-stone-200" />
@@ -170,7 +170,7 @@ export function DocumentsPage() {
               ))}
             </div>
           ) : items.length ? (
-            <div className="mt-4 space-y-2">
+            <div className="space-y-2">
               {items.map((item) => {
                 const isSelected = item.id === selectedDocument?.id;
 

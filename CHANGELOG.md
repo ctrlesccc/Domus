@@ -2,6 +2,21 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.7.0] - 2026-04-15
+
+### Gewijzigd
+- Dashboard, instellingen en meerdere beheerpagina's visueel aangescherpt met duidelijker onderscheid tussen informatie, acties en signalen.
+- App-instellingen compacter ingericht met gegroepeerde keuzelijsten voor betaalwijzen, dossiers, documentsoorten en verplichtingstypen.
+- Toevoegen in de beheerde lijsten slaat nu direct op, waardoor aparte `Opslaan`-knoppen niet meer nodig zijn.
+- Importsecties voor `Gekoppelde verplichtingen` en `OCR-tekst` zijn nu standaard ingeklapt en gebruiken dezelfde `+`/`-` conventie als dossiers.
+- Documenteditor en verplichtingenformulier zijn opgesplitst in vaste secties voor rustiger mobiel en desktopgebruik.
+- Documenten, contacten en auditlog gebruiken nu sticky filters of kopregels voor betere scanbaarheid in lange lijsten.
+- Dossiers sorteren documenten nu op documentdatum, met `createdAt` als fallback wanneer die datum ontbreekt.
+- Help, README en ontwerpdocumentatie bijgewerkt op de nieuwe interfacepatronen en release `1.7.0`.
+
+### Technisch
+- Gedeelde inklapcomponent toegevoegd zodat dossier-, import- en formsecties dezelfde interactie en spacing gebruiken.
+
 ## [1.6.3] - 2026-04-15
 
 ### Gewijzigd
@@ -34,24 +49,19 @@ All notable changes to DOMUS are documented in this file.
 - Import-dropzone vereenvoudigd door de extra uitlegtekst uit het scherm te halen en de uitleg naar de help-pagina te verplaatsen.
 - Applicatieversie bijgewerkt naar `1.6.1`.
 
-## [1.7.0] - 2026-04-07
+## [1.6.0] - 2026-04-07
 
 ### Added
 - Documenten kunnen nu als belangrijk worden gemarkeerd via een checkbox in de documenteditor.
 - Dashboardblok toegevoegd met belangrijke documenten naast het blok `Datakwaliteit`.
 
 ### Changed
-- Documentlijsten tonen nu duidelijk welke documenten als belangrijk zijn gemarkeerd.
-- SQLite bootstrap, upgradepad en Docker-startup uitgebreid met migratie `v8` voor belangrijke documenten.
-- README, helptekst en ontwerpdocumentatie bijgewerkt op de nieuwe documentmarkering en dashboardweergave.
-
-## [1.6.0] - 2026-04-07
-
-### Changed
 - Alle npm-dependencies in root, client en server bijgewerkt naar de laatst beschikbare versies.
 - Prisma bijgewerkt naar versie 7 met centrale CLI-configuratie via `prisma.config.ts`.
 - Server en seed-script aangepast op de nieuwe Prisma SQLite-adapter.
 - Technische documentatie en README bijgewerkt op de dependency- en Prisma-configuratiewijzigingen.
+- Documentlijsten tonen nu duidelijk welke documenten als belangrijk zijn gemarkeerd.
+- SQLite bootstrap, upgradepad en Docker-startup uitgebreid met migratie `v8` voor belangrijke documenten.
 
 ## [1.5.5] - 2026-04-05
 

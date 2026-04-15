@@ -5,6 +5,7 @@ import { defaultDossierOptions, defaultPaymentMethodOptions, parseStringListSett
 import type { AppSetting, BackupOverview, ManagedUser, ReferenceItem, TrashOverview } from "../types";
 import { useAuth } from "../state/auth";
 import { PageHeader } from "../ui/page-header";
+import type { ReactNode } from "react";
 
 type Section = "account" | "users" | "contactTypes" | "settings" | "backups" | "trash";
 type DensityMode = "comfortable" | "compact";
@@ -76,7 +77,11 @@ export function SettingsPage() {
       {error ? <div className="app-card px-6 py-4 text-red-700">{error}</div> : null}
 
       <section className="grid gap-3 xl:grid-cols-[240px_minmax(0,1fr)]">
-        <div className="app-card p-4">
+        <div className="app-card p-4 xl:sticky xl:top-5 xl:self-start">
+          <div className="mb-4 rounded-[1.2rem] bg-sand-50/80 px-4 py-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Navigatie</div>
+            <div className="mt-2 text-sm leading-6 text-stone-600">Kies hier welk onderdeel je wilt beheren.</div>
+          </div>
           {[
             ["account", "Mijn account"],
             ...(isAdmin ? [["users", "Gebruikers"]] : []),
@@ -146,114 +151,148 @@ export function SettingsPage() {
 
           {activeSection === "settings" && isAdmin ? (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-ink-900">App-instellingen</h3>
-              <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
-                <div className="text-sm font-semibold text-stone-700">Weergavedichtheid</div>
-                <div className="mt-3 grid max-w-sm grid-cols-2 gap-2">
-                  {[
-                    ["comfortable", "Comfort"],
-                    ["compact", "Compact"],
-                  ].map(([value, label]) => (
-                    <button
-                      className={[
-                        "rounded-full px-3 py-2 text-sm font-medium transition",
-                        density === value ? "bg-pine-700 text-white shadow-[0_10px_20px_rgba(46,71,66,0.18)]" : "bg-white text-stone-600 hover:bg-sand-100",
-                      ].join(" ")}
-                      key={value}
-                      onClick={() => setDensity(value as DensityMode)}
-                      type="button"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+              <div className="rounded-[1.4rem] bg-gradient-to-br from-sand-50/95 via-white/85 to-white/70 px-5 py-5 ring-1 ring-white/70">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">App-instellingen</div>
+                <h3 className="mt-2 text-lg font-semibold tracking-tight text-ink-900">Beheer keuzes en weergave op een centrale plek</h3>
               </div>
-              <StringListSettingEditor
-                fallback={defaultPaymentMethodOptions}
-                label="Betaalwijzen"
-                onSave={async (item, values) => {
-                  await api.updateSetting(item.id, { key: item.key, value: JSON.stringify(values) });
-                  await load();
-                }}
-                setting={settings.find((item) => item.key === "options.paymentMethods") ?? null}
-              />
-              <StringListSettingEditor
-                fallback={defaultDossierOptions}
-                label="Dossiers"
-                onSave={async (item, values) => {
-                  await api.updateSetting(item.id, { key: item.key, value: JSON.stringify(values) });
-                  await load();
-                }}
-                setting={settings.find((item) => item.key === "options.dossiers") ?? null}
-              />
-              <ReferenceListSettingEditor
-                items={documentTypes}
-                label="Documentsoorten"
-                onCreate={async (name, sortOrder) => {
-                  await api.createDocumentType({ name, sortOrder, isActive: true });
-                  await load();
-                }}
-                onDelete={async (id) => {
-                  await api.deleteDocumentType(id);
-                  await load();
-                }}
-                onSave={async (itemsToSave) => {
-                  await Promise.all(
-                    itemsToSave.map((item, index) =>
-                      api.updateDocumentType(item.id, {
-                        name: item.name,
-                        sortOrder: index,
-                        isActive: true,
-                      }),
-                    ),
-                  );
-                  await load();
-                }}
-              />
-              <ReferenceListSettingEditor
-                items={obligationTypes}
-                label="Verplichtingstypen"
-                onCreate={async (name, sortOrder) => {
-                  await api.createObligationType({ name, sortOrder, isActive: true });
-                  await load();
-                }}
-                onDelete={async (id) => {
-                  await api.deleteObligationType(id);
-                  await load();
-                }}
-                onSave={async (itemsToSave) => {
-                  await Promise.all(
-                    itemsToSave.map((item, index) =>
-                      api.updateObligationType(item.id, {
-                        name: item.name,
-                        sortOrder: index,
-                        isActive: true,
-                      }),
-                    ),
-                  );
-                  await load();
-                }}
-              />
-              <NumberSettingEditor
-                description="Bepaalt hoeveel dagen vooruit het planningblok op het dashboard toont."
-                label="Planningvenster dashboard"
-                onSave={async (item, value) => {
-                  await api.updateSetting(item.id, { key: item.key, value: String(value) });
-                  await load();
-                }}
-                setting={settings.find((item) => item.key === "dashboard.expiryWindowDays") ?? null}
-                suffix="dagen"
-              />
-              {settings.filter((item) => !["options.paymentMethods", "options.dossiers", "dashboard.expiryWindowDays"].includes(item.key)).map((item) => (
-                <SettingRow
-                  key={item.id}
-                  onSave={async (value) => {
-                    await api.updateSetting(item.id, { key: item.key, value });
+
+              <SettingsGroup
+                description="Kies hoe compact formulieren, tabellen en kaarten door de app heen aanvoelen."
+                eyebrow="Weergave"
+                title="Schermdichtheid"
+              >
+                <div className="rounded-[1.35rem] bg-sand-50/78 p-4">
+                  <div className="grid max-w-sm grid-cols-2 gap-2">
+                    {[
+                      ["comfortable", "Comfort"],
+                      ["compact", "Compact"],
+                    ].map(([value, label]) => (
+                      <button
+                        className={[
+                          "rounded-full px-3 py-2 text-sm font-medium transition",
+                          density === value ? "bg-pine-700 text-white shadow-[0_10px_20px_rgba(46,71,66,0.18)]" : "bg-white text-stone-600 hover:bg-sand-100",
+                        ].join(" ")}
+                        key={value}
+                        onClick={() => setDensity(value as DensityMode)}
+                        type="button"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </SettingsGroup>
+
+              <SettingsGroup
+                description="Onderhoud de keuzelijsten die op meerdere formulieren terugkomen."
+                eyebrow="Keuzelijsten"
+                title="Standaardwaarden"
+              >
+                <div className="grid gap-3 xl:grid-cols-2">
+                  <StringListSettingEditor
+                    fallback={defaultPaymentMethodOptions}
+                    label="Betaalwijzen"
+                    onSave={async (item, values) => {
+                      await api.updateSetting(item.id, { key: item.key, value: JSON.stringify(values) });
+                      await load();
+                    }}
+                    setting={settings.find((item) => item.key === "options.paymentMethods") ?? null}
+                  />
+                  <StringListSettingEditor
+                    fallback={defaultDossierOptions}
+                    label="Dossiers"
+                    onSave={async (item, values) => {
+                      await api.updateSetting(item.id, { key: item.key, value: JSON.stringify(values) });
+                      await load();
+                    }}
+                    setting={settings.find((item) => item.key === "options.dossiers") ?? null}
+                  />
+                  <ReferenceListSettingEditor
+                    items={documentTypes}
+                    label="Documentsoorten"
+                    onCreate={async (name, sortOrder) => {
+                      await api.createDocumentType({ name, sortOrder, isActive: true });
+                      await load();
+                    }}
+                    onDelete={async (id) => {
+                      await api.deleteDocumentType(id);
+                      await load();
+                    }}
+                    onSave={async (itemsToSave) => {
+                      await Promise.all(
+                        itemsToSave.map((item, index) =>
+                          api.updateDocumentType(item.id, {
+                            name: item.name,
+                            sortOrder: index,
+                            isActive: true,
+                          }),
+                        ),
+                      );
+                      await load();
+                    }}
+                  />
+                  <ReferenceListSettingEditor
+                    items={obligationTypes}
+                    label="Verplichtingstypen"
+                    onCreate={async (name, sortOrder) => {
+                      await api.createObligationType({ name, sortOrder, isActive: true });
+                      await load();
+                    }}
+                    onDelete={async (id) => {
+                      await api.deleteObligationType(id);
+                      await load();
+                    }}
+                    onSave={async (itemsToSave) => {
+                      await Promise.all(
+                        itemsToSave.map((item, index) =>
+                          api.updateObligationType(item.id, {
+                            name: item.name,
+                            sortOrder: index,
+                            isActive: true,
+                          }),
+                        ),
+                      );
+                      await load();
+                    }}
+                  />
+                </div>
+              </SettingsGroup>
+
+              <SettingsGroup
+                description="Stuur hoeveel vooruitblik het dashboard toont voor aankomende afschrijvingen."
+                eyebrow="Dashboard"
+                title="Planning en signalering"
+              >
+                <NumberSettingEditor
+                  description="Bepaalt hoeveel dagen vooruit het planningblok op het dashboard toont."
+                  label="Planningvenster dashboard"
+                  onSave={async (item, value) => {
+                    await api.updateSetting(item.id, { key: item.key, value: String(value) });
                     await load();
                   }}
-                  setting={item}
+                  setting={settings.find((item) => item.key === "dashboard.expiryWindowDays") ?? null}
+                  suffix="dagen"
                 />
-              ))}
+              </SettingsGroup>
+
+              {settings.filter((item) => !["options.paymentMethods", "options.dossiers", "dashboard.expiryWindowDays"].includes(item.key)).length ? (
+                <SettingsGroup eyebrow="Overig" title="Aanvullende instellingen">
+                  <div className="space-y-3">
+                    {settings
+                      .filter((item) => !["options.paymentMethods", "options.dossiers", "dashboard.expiryWindowDays"].includes(item.key))
+                      .map((item) => (
+                        <SettingRow
+                          key={item.id}
+                          onSave={async (value) => {
+                            await api.updateSetting(item.id, { key: item.key, value });
+                            await load();
+                          }}
+                          setting={item}
+                        />
+                      ))}
+                  </div>
+                </SettingsGroup>
+              ) : null}
             </div>
           ) : null}
 
@@ -276,6 +315,29 @@ export function SettingsPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function SettingsGroup({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[1.4rem] bg-white/55 px-5 py-5 ring-1 ring-white/65">
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{eyebrow}</div>
+        <h4 className="mt-2 text-base font-semibold tracking-tight text-ink-900">{title}</h4>
+        {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">{description}</p> : null}
+      </div>
+      <div className="mt-4 space-y-3">{children}</div>
+    </section>
   );
 }
 

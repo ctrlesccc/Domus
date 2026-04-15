@@ -144,10 +144,10 @@ export function DossiersPage() {
                         setDropTarget(null);
                       }}
                     >
-                      <Link className="block" to={`/documents/${item.id}`}>
+                      <a className="block" href={item.downloadUrl} rel="noreferrer" target="_blank">
                         <div className="text-[0.98rem] font-medium leading-6 text-ink-900">{item.title}</div>
                         <div className="mt-0.5 text-sm text-stone-500">{item.documentType.name} · {formatDate(item.expiryDate || item.documentDate)}</div>
-                      </Link>
+                      </a>
                     </div>
                   )) : <p className="text-sm text-stone-500">Geen documenten in dit dossier.</p>}
                 </div>

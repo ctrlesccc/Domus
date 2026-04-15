@@ -49,6 +49,8 @@ export function ImportsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isObligationsExpanded, setIsObligationsExpanded] = useState(false);
+  const [isOcrTextExpanded, setIsOcrTextExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function load(options?: { silent?: boolean }) {
@@ -146,6 +148,8 @@ export function ImportsPage() {
       dossierTopic: selectedItem.draftDossierTopic || "",
       notes: selectedItem.draftNotes || "",
     });
+    setIsObligationsExpanded(false);
+    setIsOcrTextExpanded(false);
   }, [selectedItem]);
 
   return (
@@ -523,26 +527,35 @@ export function ImportsPage() {
               </div>
 
               <div>
-                <label className="app-label">Gekoppelde verplichtingen</label>
-                <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
-                  {obligations.map((item) => (
-                    <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
-                      <input
-                        checked={form.obligationIds.includes(String(item.id))}
-                        onChange={(event) =>
-                          setForm({
-                            ...form,
-                            obligationIds: event.target.checked
-                              ? [...new Set([...form.obligationIds, String(item.id)])]
-                              : form.obligationIds.filter((value) => value !== String(item.id)),
-                          })
-                        }
-                        type="checkbox"
-                      />
-                      {item.title}
-                    </label>
-                  ))}
-                </div>
+                <button
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-left"
+                  onClick={() => setIsObligationsExpanded((current) => !current)}
+                  type="button"
+                >
+                  <span className="app-label mb-0">Gekoppelde verplichtingen</span>
+                  <span className="text-sm text-stone-500">{isObligationsExpanded ? "Inklappen" : "Uitklappen"}</span>
+                </button>
+                {isObligationsExpanded ? (
+                  <div className="mt-3 grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
+                    {obligations.map((item) => (
+                      <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
+                        <input
+                          checked={form.obligationIds.includes(String(item.id))}
+                          onChange={(event) =>
+                            setForm({
+                              ...form,
+                              obligationIds: event.target.checked
+                                ? [...new Set([...form.obligationIds, String(item.id)])]
+                                : form.obligationIds.filter((value) => value !== String(item.id)),
+                            })
+                          }
+                          type="checkbox"
+                        />
+                        {item.title}
+                      </label>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               <div>
@@ -552,10 +565,19 @@ export function ImportsPage() {
 
               {selectedItem.ocrText ? (
                 <div>
-                  <label className="app-label">OCR-tekst</label>
-                  <div className="max-h-56 overflow-y-auto rounded-2xl bg-sand-50 px-4 py-4 text-sm leading-6 text-stone-600">
-                    {selectedItem.ocrText}
-                  </div>
+                  <button
+                    className="flex w-full items-center justify-between gap-3 rounded-2xl bg-sand-50 px-4 py-3 text-left"
+                    onClick={() => setIsOcrTextExpanded((current) => !current)}
+                    type="button"
+                  >
+                    <span className="app-label mb-0">OCR-tekst</span>
+                    <span className="text-sm text-stone-500">{isOcrTextExpanded ? "Inklappen" : "Uitklappen"}</span>
+                  </button>
+                  {isOcrTextExpanded ? (
+                    <div className="mt-3 max-h-56 overflow-y-auto rounded-2xl bg-sand-50 px-4 py-4 text-sm leading-6 text-stone-600">
+                      {selectedItem.ocrText}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
 

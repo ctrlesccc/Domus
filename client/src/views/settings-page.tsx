@@ -353,21 +353,50 @@ function StringListSettingEditor({
     return null;
   }
 
+  const activeSetting = setting;
+
+  async function persistValues(nextValues: string[]) {
+    setIsSaving(true);
+    try {
+      const cleanedValues = nextValues.map((item) => item.trim()).filter(Boolean);
+      await onSave(activeSetting, cleanedValues);
+      setDraftValues(cleanedValues);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-3 rounded-[1.35rem] bg-white/65 p-4">
       <div>
         <div className="text-sm font-semibold text-stone-700">{label}</div>
-        <div className="mt-1 text-sm text-stone-500">Deze waarden verschijnen in dropdownvelden door de hele applicatie.</div>
       </div>
       <div className="flex flex-wrap gap-2">
-        {draftValues.map((item) => (
-          <div className="flex items-center gap-2 rounded-full bg-sand-50 px-3 py-2 text-sm text-stone-700" key={item}>
+        {draftValues.map((item, index) => (
+          <div className="flex items-center gap-2 rounded-full bg-sand-50 px-3 py-2 text-sm text-stone-700" key={`${item}-${index}`}>
             <input
               className="min-w-24 bg-transparent outline-none"
               value={item}
-              onChange={(event) => setDraftValues((current) => current.map((value) => (value === item ? event.target.value : value)))}
+              onBlur={() => persistValues(draftValues)}
+              onChange={(event) =>
+                setDraftValues((current) => current.map((value, valueIndex) => (valueIndex === index ? event.target.value : value)))
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.currentTarget.blur();
+                }
+              }}
             />
-            <button className="text-red-600" onClick={() => setDraftValues((current) => current.filter((value) => value !== item))} type="button">
+            <button
+              className="text-red-600"
+              disabled={isSaving}
+              onClick={() => {
+                const nextValues = draftValues.filter((_, valueIndex) => valueIndex !== index);
+                persistValues(nextValues).catch(() => undefined);
+              }}
+              type="button"
+            >
               x
             </button>
           </div>
@@ -385,33 +414,12 @@ function StringListSettingEditor({
             }
 
             const nextValues = [...new Set([...draftValues, trimmed])].sort((left, right) => left.localeCompare(right, "nl"));
-            setIsSaving(true);
-            try {
-              await onSave(setting, nextValues);
-              setDraftValues(nextValues);
-              setNewValue("");
-            } finally {
-              setIsSaving(false);
-            }
+            await persistValues(nextValues);
+            setNewValue("");
           }}
           type="button"
         >
           {isSaving ? "Opslaan..." : "Toevoegen"}
-        </button>
-        <button
-          className="app-button"
-          disabled={isSaving}
-          onClick={async () => {
-            setIsSaving(true);
-            try {
-              await onSave(setting, draftValues.map((item) => item.trim()).filter(Boolean));
-            } finally {
-              setIsSaving(false);
-            }
-          }}
-          type="button"
-        >
-          {isSaving ? "Bezig..." : "Opslaan"}
         </button>
       </div>
     </div>
@@ -439,11 +447,21 @@ function ReferenceListSettingEditor({
     setDraftItems(items.map((item) => ({ id: item.id, name: item.name })));
   }, [items]);
 
+  async function persistItems(nextItems: Array<{ id: number; name: string }>) {
+    setIsSaving(true);
+    try {
+      const cleanedItems = nextItems.map((item) => ({ ...item, name: item.name.trim() })).filter((item) => item.name);
+      await onSave(cleanedItems);
+      setDraftItems(cleanedItems);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-3 rounded-[1.35rem] bg-white/65 p-4">
       <div>
         <div className="text-sm font-semibold text-stone-700">{label}</div>
-        <div className="mt-1 text-sm text-stone-500">Deze waarden verschijnen in dropdownvelden door de hele applicatie.</div>
       </div>
       <div className="flex flex-wrap gap-2">
         {draftItems.map((item) => (
@@ -451,11 +469,18 @@ function ReferenceListSettingEditor({
             <input
               className="min-w-24 bg-transparent outline-none"
               value={item.name}
+              onBlur={() => persistItems(draftItems)}
               onChange={(event) =>
                 setDraftItems((current) =>
                   current.map((value) => (value.id === item.id ? { ...value, name: event.target.value } : value)),
                 )
               }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.currentTarget.blur();
+                }
+              }}
             />
             <button
               className="text-red-600"
@@ -497,21 +522,6 @@ function ReferenceListSettingEditor({
           type="button"
         >
           {isSaving ? "Opslaan..." : "Toevoegen"}
-        </button>
-        <button
-          className="app-button"
-          disabled={isSaving}
-          onClick={async () => {
-            setIsSaving(true);
-            try {
-              await onSave(draftItems.map((item) => ({ id: item.id, name: item.name.trim() })).filter((item) => item.name));
-            } finally {
-              setIsSaving(false);
-            }
-          }}
-          type="button"
-        >
-          {isSaving ? "Bezig..." : "Opslaan"}
         </button>
       </div>
     </div>

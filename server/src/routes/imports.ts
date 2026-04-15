@@ -186,6 +186,35 @@ importsRouter.post("/:id/retry-analysis", async (request, response) => {
   return response.json({ success: true });
 });
 
+importsRouter.post("/retry-analysis-all", async (request, response) => {
+  const items = await prisma.importDocument.findMany({
+    where: {
+      status: { not: "IMPORTED" },
+    },
+    orderBy: { discoveredAt: "desc" },
+  });
+
+  for (const item of items) {
+    await resetAndQueueImportAnalysis({
+      id: item.id,
+      sourcePath: item.sourcePath,
+      mimeType: item.mimeType,
+      originalFilename: item.originalFilename,
+    });
+  }
+
+  await writeAuditLog({
+    entityType: "import-document",
+    entityId: 0,
+    action: "retry-analysis-all",
+    ...auditActorFromRequest(request),
+    oldValue: { queuedItems: items.length },
+    newValue: { ocrStatus: "PENDING" },
+  });
+
+  return response.json({ success: true, queued: items.length });
+});
+
 importsRouter.delete("/:id", async (request, response) => {
   const id = Number(request.params.id);
   const item = await prisma.importDocument.findUnique({ where: { id } });

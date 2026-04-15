@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatDate, formatFileSize } from "../lib/format";
 import { defaultDossierOptions, dossierSelectOptions, referenceOptions, sortByLabel } from "../lib/options";
@@ -34,7 +33,6 @@ const ocrStatusClasses: Record<ImportItem["ocrStatus"], string> = {
 };
 
 export function ImportsPage() {
-  const navigate = useNavigate();
   const [items, setItems] = useState<ImportItem[]>([]);
   const [documentTypes, setDocumentTypes] = useState<ReferenceItem[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -46,9 +44,11 @@ export function ImportsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isRetryingAll, setIsRetryingAll] = useState(false);
   const [isDraggingQueue, setIsDraggingQueue] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function load(options?: { silent?: boolean }) {
@@ -112,6 +112,7 @@ export function ImportsPage() {
     }
 
     setError("");
+    setSuccessMessage("");
     setIsUploading(true);
     try {
       const payload = new FormData();
@@ -156,6 +157,7 @@ export function ImportsPage() {
       />
 
       {error ? <div className="app-card px-6 py-4 text-red-700">{error}</div> : null}
+      {successMessage ? <div className="app-card px-6 py-4 text-pine-800">{successMessage}</div> : null}
 
       <section className="grid gap-3 lg:grid-cols-[1.25fr_0.25fr_0.25fr_0.25fr]">
         <div className="app-card flex min-h-24 flex-col justify-between px-5 py-5">
@@ -186,13 +188,44 @@ export function ImportsPage() {
               <div className="app-section-kicker">Queue</div>
               <h3 className="app-section-title mt-2">Importitems</h3>
             </div>
-            <button
-              className="app-button-secondary"
-              onClick={() => load().catch((loadError) => setError(loadError.message))}
-              type="button"
-            >
-              {isRefreshing ? "Bezig..." : "Vernieuwen"}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="app-button-secondary"
+                disabled={!items.length || isRetryingAll}
+                onClick={async () => {
+                  setError("");
+                  setSuccessMessage("");
+                  setIsRetryingAll(true);
+                  try {
+                    const result = await api.retryAllImportAnalyses();
+                    await load({ silent: true });
+                    setSuccessMessage(
+                      result.queued
+                        ? `${result.queued} importitem${result.queued === 1 ? "" : "s"} opnieuw in analyse gezet.`
+                        : "Er stonden geen importitems klaar voor heranalyse.",
+                    );
+                  } catch (retryError) {
+                    setError(retryError instanceof Error ? retryError.message : "Heranalyse voor de queue mislukt.");
+                  } finally {
+                    setIsRetryingAll(false);
+                  }
+                }}
+                type="button"
+              >
+                {isRetryingAll ? "Queue starten..." : "Queue opnieuw analyseren"}
+              </button>
+              <button
+                className="app-button-secondary"
+                onClick={() => {
+                  setError("");
+                  setSuccessMessage("");
+                  load().catch((loadError) => setError(loadError.message));
+                }}
+                type="button"
+              >
+                {isRefreshing ? "Bezig..." : "Vernieuwen"}
+              </button>
+            </div>
           </div>
 
           <div
@@ -217,6 +250,7 @@ export function ImportsPage() {
             onDrop={(event) => {
               event.preventDefault();
               setIsDraggingQueue(false);
+              setSuccessMessage("");
               handleQueueUpload(event.dataTransfer.files?.[0] ?? null).catch(() => undefined);
             }}
           >
@@ -292,6 +326,7 @@ export function ImportsPage() {
               onSubmit={async (event) => {
                 event.preventDefault();
                 setError("");
+                setSuccessMessage("");
                 setIsSaving(true);
                 try {
                   await api.finalizeImport(selectedItem.id, {
@@ -302,7 +337,7 @@ export function ImportsPage() {
                     obligationIds: form.obligationIds.map(Number),
                   });
                   await load({ silent: true });
-                  navigate("/documents");
+                  setSuccessMessage(`"${selectedItem.originalFilename}" is opgenomen als document. Je blijft in de importqueue.`);
                 } catch (saveError) {
                   setError(saveError instanceof Error ? saveError.message : "Import afronden mislukt.");
                 } finally {
@@ -332,6 +367,7 @@ export function ImportsPage() {
                         disabled={isRetrying}
                         onClick={async () => {
                           setError("");
+                          setSuccessMessage("");
                           setIsRetrying(true);
                           try {
                             await api.retryImportAnalysis(selectedItem.id);
@@ -395,17 +431,6 @@ export function ImportsPage() {
                       ))}
                     </div>
                   </div>
-
-                  {selectedItem.analysis.signals.length ? (
-                    <div className="rounded-[1.35rem] bg-pine-700 px-4 py-4 text-white">
-                      <div className="text-sm font-semibold">Waarom deze suggesties?</div>
-                      <div className="mt-3 space-y-2 text-sm text-white/82">
-                        {selectedItem.analysis.signals.map((signal) => (
-                          <div key={signal}>{signal}</div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
 
                   {selectedItem.analysis.warnings.length ? (
                     <div className="rounded-[1.35rem] bg-amber-50 p-4">
@@ -498,29 +523,6 @@ export function ImportsPage() {
               </div>
 
               <div>
-                <label className="app-label">Extra contacten</label>
-                <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
-                  {contacts.map((item) => (
-                    <label className="flex items-center gap-3 text-sm text-stone-700" key={item.id}>
-                      <input
-                        checked={form.contactIds.includes(String(item.id))}
-                        onChange={(event) =>
-                          setForm({
-                            ...form,
-                            contactIds: event.target.checked
-                              ? [...new Set([...form.contactIds, String(item.id)])]
-                              : form.contactIds.filter((value) => value !== String(item.id)),
-                          })
-                        }
-                        type="checkbox"
-                      />
-                      {item.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <label className="app-label">Gekoppelde verplichtingen</label>
                 <div className="grid gap-3 rounded-2xl bg-sand-50 px-4 py-4 md:grid-cols-2">
                   {obligations.map((item) => (
@@ -570,6 +572,7 @@ export function ImportsPage() {
                     }
 
                     setError("");
+                    setSuccessMessage("");
                     setIsDeleting(true);
                     try {
                       await api.deleteImport(selectedItem.id);

@@ -2,6 +2,16 @@
 
 All notable changes to DOMUS are documented in this file.
 
+## [1.6.3] - 2026-04-15
+
+### Gewijzigd
+- Importintake blijft na `Concept goedkeuren en opnemen` in het importscherm zodat de queue direct verder kan worden verwerkt.
+- Importqueue ondersteunt nu heranalyse van alle open items tegelijk, naast heranalyse per afzonderlijk item.
+- Importscherm opgeschoond door het blok `Waarom deze suggesties?` en de sectie `Extra contacten` te verwijderen.
+- Dossiers starten voortaan standaard geminimaliseerd en blijven ook zichtbaar wanneer ze leeg zijn.
+- Jaarplanning verwijderd uit de applicatienavigatie en help bijgewerkt op de actuele modules en importworkflow.
+- Applicatieversie bijgewerkt naar `1.6.3`.
+
 ## [1.6.2] - 2026-04-09
 
 ### Changed

@@ -5,7 +5,6 @@ import { useAuth } from "../state/auth";
 
 const navigation = [
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/planning", label: "Jaarplanning" },
   { to: "/dossiers", label: "Dossiers" },
   { to: "/imports", label: "Import" },
   { to: "/documents", label: "Documenten" },
@@ -18,7 +17,7 @@ const navigation = [
   { to: "/settings", label: "Instellingen" },
 ];
 
-const appVersion = "v1.6.2";
+const appVersion = "v1.6.3";
 
 type NavigationCounts = Partial<Record<(typeof navigation)[number]["to"], number>>;
 

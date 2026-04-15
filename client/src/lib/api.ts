@@ -1,4 +1,4 @@
-import type { AppSetting, AuditEntry, BackupOverview, Contact, DashboardData, DossierOverview, DocumentItem, ImportItem, ManagedUser, NavigationCounts, Obligation, PlanningOverview, ReferenceItem, SearchResults, TrashOverview, User } from "../types";
+import type { AppSetting, AuditEntry, BackupOverview, Contact, DashboardData, DossierOverview, DocumentItem, ImportItem, ManagedUser, NavigationCounts, Obligation, ReferenceItem, SearchResults, TrashOverview, User } from "../types";
 
 export const DOMUS_DATA_CHANGED_EVENT = "domus:data-changed";
 
@@ -43,7 +43,6 @@ export const api = {
   dashboard: () => request<DashboardData>("/api/dashboard"),
   navigationCounts: () => request<NavigationCounts>("/api/dashboard/navigation-counts"),
   search: (q: string) => request<SearchResults>(`/api/search?q=${encodeURIComponent(q)}`),
-  planning: () => request<PlanningOverview>("/api/planning"),
   dossiers: () => request<DossierOverview>("/api/dossiers"),
   assignDossier: (payload: { entityType: "document" | "contact" | "obligation"; entityId: number; dossierTopic: string }) =>
     request<{ success: true }>("/api/dossiers/assign", { method: "POST", body: JSON.stringify(payload) }),
@@ -52,6 +51,7 @@ export const api = {
   syncImports: () => request<{ success: true }>("/api/imports/sync", { method: "POST" }),
   uploadImport: (payload: FormData) => request<{ id: number }>("/api/imports/upload", { method: "POST", body: payload }),
   retryImportAnalysis: (id: number) => request<{ success: true }>(`/api/imports/${id}/retry-analysis`, { method: "POST" }),
+  retryAllImportAnalyses: () => request<{ success: true; queued: number }>("/api/imports/retry-analysis-all", { method: "POST" }),
   deleteImport: (id: number) => request<void>(`/api/imports/${id}`, { method: "DELETE" }),
   finalizeImport: (id: number, payload: unknown) => request<{ documentId: number }>(`/api/imports/${id}/finalize`, { method: "POST", body: JSON.stringify(payload) }),
 

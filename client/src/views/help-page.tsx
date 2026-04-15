@@ -14,17 +14,12 @@ const modules = [
   {
     title: "Contacten",
     description:
-      "Zakelijke en persoonlijke contacten worden apart beheerd. Persoonlijke contacten ondersteunen geboortedatum en kaartvoorkeuren, zodat planning en opvolging completer worden.",
+      "Zakelijke en persoonlijke contacten worden apart beheerd. Persoonlijke contacten ondersteunen geboortedatum en kaartvoorkeuren, zodat opvolging completer wordt.",
   },
   {
     title: "Verplichtingen",
     description:
       "Leg contracten, abonnementen, polissen en andere vaste lasten vast met bedrag, frequentie, betaalwijze, evaluatiedatum, herinnering, einddatum en geplande afschrijvingsdatum zonder jaar.",
-  },
-  {
-    title: "Jaarplanning",
-    description:
-      "De jaarplanning brengt documentdata, vervaldata, herinneringen, evaluaties, contracteinden en verjaardagen samen op een tijdlijn.",
   },
   {
     title: "Dossiers",
@@ -48,7 +43,7 @@ const importFlow = [
   "Of sleep documenten direct naar de queue in het importscherm om dezelfde intakeflow meteen vanuit de app te starten.",
   "DOMUS ontdekt nieuwe bestanden automatisch en zet ze in de importqueue als draft.",
   "OCR en tekstanalyse proberen titel, documentsoort, contact, data, dossier, notities en herkenbare referenties al vooraf in te vullen.",
-  "In de intake zie je live of analyse nog bezig is, welke signalen tot een suggestie hebben geleid en kun je indien nodig een heranalyse starten.",
+  "In de intake zie je live of analyse nog bezig is en kun je per item of voor de complete queue een heranalyse starten.",
   "Daarna controleer je preview, confidence en waarschuwingen en vul je alleen aan wat nog ontbreekt.",
   "Pas na jouw akkoord wordt het bestand verplaatst naar de documentopslag en als definitief document opgenomen.",
 ];
@@ -64,7 +59,7 @@ const dashboardHighlights = [
 
 const practicalTips = [
   "Gebruik dossiers consequent en sleep items in de dossierweergave direct naar het juiste onderwerp als iets verkeerd staat.",
-  "Vul documentdatum, vervaldatum, reviewdatum en geboortedata zoveel mogelijk in. De planning wordt daardoor waardevoller.",
+  "Vul documentdatum, vervaldatum, reviewdatum en geboortedata zoveel mogelijk in. Dat houdt documenten en opvolging compleet.",
   "Markeer echt kritieke documenten als belangrijk zodat ze op het dashboard apart zichtbaar blijven.",
   "Vul bij verplichtingen ook betaalwijze en geplande afschrijvingsdatum in. Het dashboard wordt daardoor bruikbaarder.",
   "Koppel documenten aan contacten en verplichtingen. Zo ontstaat een bruikbaar netwerk tussen bestanden, partijen en kosten.",
@@ -95,7 +90,7 @@ export function HelpPage() {
           <h3 className="app-section-title mt-2">Waar DOMUS voor bedoeld is</h3>
           <p className="mt-4 text-sm leading-7 text-stone-700">
             DOMUS is een centrale werkplek voor huishoudelijke administratie. De app combineert documenten,
-            contacten, verplichtingen, planning, dossiervorming en kostenbewaking in een rustige omgeving die
+            contacten, verplichtingen, dossiervorming en kostenbewaking in een rustige omgeving die
             vooral gericht is op overzicht en opvolging.
           </p>
           <p className="mt-4 text-sm leading-7 text-stone-700">
@@ -168,25 +163,14 @@ export function HelpPage() {
             vooringevuld.
           </p>
           <p className="mt-4 text-sm leading-7 text-stone-700">
-            De intake toont confidence-scores, verklarende signalen, herkenbare referenties en waarschuwingen,
-            zodat je snel ziet welke velden betrouwbaar zijn en welke nog handmatige controle nodig hebben.
-            Als OCR vastloopt of te weinig oplevert, kun je vanuit hetzelfde scherm direct een heranalyse starten.
+            De intake toont confidence-scores, herkenbare referenties en waarschuwingen, zodat je snel ziet welke
+            velden betrouwbaar zijn en welke nog handmatige controle nodig hebben. Als OCR vastloopt of te weinig
+            oplevert, kun je vanuit hetzelfde scherm direct een heranalyse starten, ook voor de volledige queue.
           </p>
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1fr_1fr_1fr]">
-        <div className="app-card px-6 py-6">
-          <div className="app-section-kicker">Planning</div>
-          <h3 className="app-section-title mt-2">Waar de jaarplanning op let</h3>
-          <div className="mt-4 space-y-2 text-sm text-stone-700">
-            <div className="rounded-2xl bg-sand-50 px-4 py-3">Documentdatums en vervaldatums</div>
-            <div className="rounded-2xl bg-sand-50 px-4 py-3">Herinneringen en evaluatiedata van verplichtingen</div>
-            <div className="rounded-2xl bg-sand-50 px-4 py-3">Contracteinden en aflopende afspraken</div>
-            <div className="rounded-2xl bg-sand-50 px-4 py-3">Verjaardagen van persoonlijke contacten</div>
-          </div>
-        </div>
-
+      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
         <div className="app-card px-6 py-6">
           <div className="app-section-kicker">Dossiers</div>
           <h3 className="app-section-title mt-2">Werken per onderwerp</h3>

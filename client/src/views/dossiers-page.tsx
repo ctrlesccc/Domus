@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { formatCurrency, formatDate } from "../lib/format";
 import type { DossierOverview } from "../types";
@@ -19,6 +19,7 @@ export function DossiersPage() {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [collapsedDossiers, setCollapsedDossiers] = useState<string[]>([]);
+  const hasInitializedCollapse = useRef(false);
 
   async function load() {
     const next = await api.dossiers();
@@ -28,6 +29,15 @@ export function DossiersPage() {
   useEffect(() => {
     load().catch((loadError) => setError(loadError.message));
   }, []);
+
+  useEffect(() => {
+    if (!data || hasInitializedCollapse.current) {
+      return;
+    }
+
+    setCollapsedDossiers(data.dossiers.map((dossier) => dossier.key));
+    hasInitializedCollapse.current = true;
+  }, [data]);
 
   if (error) {
     return <div className="app-card px-6 py-5 text-red-700">{error}</div>;

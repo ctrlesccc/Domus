@@ -226,26 +226,6 @@ export type AppSetting = {
   value: string;
 };
 
-export type PlanningEvent = {
-  id: string;
-  date: string;
-  category: "DOCUMENT" | "OBLIGATION" | "CONTACT";
-  kind: string;
-  title: string;
-  subtitle: string;
-  relatedName?: string | null;
-  href: string;
-};
-
-export type PlanningOverview = {
-  upcoming: PlanningEvent[];
-  counts: {
-    documents: number;
-    obligations: number;
-    contacts: number;
-  };
-};
-
 export type DossierOverview = {
   dossiers: {
     key: string;

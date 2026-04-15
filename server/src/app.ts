@@ -58,7 +58,6 @@ export async function createApp() {
   const { trashRouter } = await import("./routes/trash.js");
   const { backupsRouter } = await import("./routes/backups.js");
   const { auditRouter } = await import("./routes/audit.js");
-  const { planningRouter } = await import("./routes/planning.js");
   const { dossiersRouter } = await import("./routes/dossiers.js");
   const { importsRouter } = await import("./routes/imports.js");
 
@@ -76,7 +75,6 @@ export async function createApp() {
   app.use("/api/trash", trashRouter);
   app.use("/api/backups", backupsRouter);
   app.use("/api/audit", auditRouter);
-  app.use("/api/planning", planningRouter);
   app.use("/api/dossiers", dossiersRouter);
   app.use("/api/imports", importsRouter);
 

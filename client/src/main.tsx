@@ -13,7 +13,6 @@ import { ObligationsPage } from "./views/obligations-page";
 import { SearchPage } from "./views/search-page";
 import { SettingsPage } from "./views/settings-page";
 import { HelpPage } from "./views/help-page";
-import { PlanningPage } from "./views/planning-page";
 import { DossiersPage } from "./views/dossiers-page";
 import { AuditPage } from "./views/audit-page";
 import { ImportsPage } from "./views/imports-page";
@@ -54,7 +53,6 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
-      { path: "planning", element: <PlanningPage /> },
       { path: "dossiers", element: <DossiersPage /> },
       { path: "imports", element: <ImportsPage /> },
       { path: "contacts", element: <ContactsPage kind="BUSINESS" /> },

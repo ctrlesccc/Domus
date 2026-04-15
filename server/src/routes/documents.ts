@@ -70,7 +70,7 @@ documentsRouter.get("/", async (request, response) => {
       expiryDate: expiryBefore ? { lte: expiryBefore } : undefined,
     },
     include: buildDocumentIncludes(),
-    orderBy: [{ expiryDate: "asc" }, { createdAt: "desc" }],
+    orderBy: [{ documentDate: "desc" }, { createdAt: "desc" }],
   });
 
   return response.json(items.map(serializeDocument));

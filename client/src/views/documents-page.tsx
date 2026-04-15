@@ -221,7 +221,7 @@ export function DocumentsPage() {
                               ? item.linkedContacts.map((contact) => contact.name).join(", ")
                               : item.contact?.name ?? "Niet gekoppeld"}
                           </span>
-                          <span>Vervalt: {formatDate(item.expiryDate)}</span>
+                          <span>Documentdatum: {formatDate(item.documentDate)}</span>
                         </div>
                       </div>
 

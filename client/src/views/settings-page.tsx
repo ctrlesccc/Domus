@@ -6,7 +6,7 @@ import type { AppSetting, BackupOverview, ManagedUser, ReferenceItem, TrashOverv
 import { useAuth } from "../state/auth";
 import { PageHeader } from "../ui/page-header";
 
-type Section = "account" | "users" | "contactTypes" | "documentTypes" | "obligationTypes" | "settings" | "backups" | "trash";
+type Section = "account" | "users" | "contactTypes" | "settings" | "backups" | "trash";
 type DensityMode = "comfortable" | "compact";
 
 export function SettingsPage() {
@@ -81,8 +81,6 @@ export function SettingsPage() {
             ["account", "Mijn account"],
             ...(isAdmin ? [["users", "Gebruikers"]] : []),
             ...(isAdmin ? [["contactTypes", "Contactsoorten"]] : []),
-            ...(isAdmin ? [["documentTypes", "Documentsoorten"]] : []),
-            ...(isAdmin ? [["obligationTypes", "Verplichtingstypen"]] : []),
             ...(isAdmin ? [["settings", "App-instellingen"]] : []),
             ...(isAdmin ? [["backups", "Back-ups"]] : []),
             ["trash", "Prullenbak"],
@@ -146,44 +144,6 @@ export function SettingsPage() {
             />
           ) : null}
 
-          {activeSection === "documentTypes" && isAdmin ? (
-            <ReferenceEditor
-              items={documentTypes}
-              onCreate={async (payload) => {
-                await api.createDocumentType(payload);
-                await load();
-              }}
-              onDelete={async (id) => {
-                await api.deleteDocumentType(id);
-                await load();
-              }}
-              onUpdate={async (id, payload) => {
-                await api.updateDocumentType(id, payload);
-                await load();
-              }}
-              title="Documentsoorten"
-            />
-          ) : null}
-
-          {activeSection === "obligationTypes" && isAdmin ? (
-            <ReferenceEditor
-              items={obligationTypes}
-              onCreate={async (payload) => {
-                await api.createObligationType(payload);
-                await load();
-              }}
-              onDelete={async (id) => {
-                await api.deleteObligationType(id);
-                await load();
-              }}
-              onUpdate={async (id, payload) => {
-                await api.updateObligationType(id, payload);
-                await load();
-              }}
-              title="Verplichtingstypen"
-            />
-          ) : null}
-
           {activeSection === "settings" && isAdmin ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-ink-900">App-instellingen</h3>
@@ -225,6 +185,54 @@ export function SettingsPage() {
                   await load();
                 }}
                 setting={settings.find((item) => item.key === "options.dossiers") ?? null}
+              />
+              <ReferenceListSettingEditor
+                items={documentTypes}
+                label="Documentsoorten"
+                onCreate={async (name, sortOrder) => {
+                  await api.createDocumentType({ name, sortOrder, isActive: true });
+                  await load();
+                }}
+                onDelete={async (id) => {
+                  await api.deleteDocumentType(id);
+                  await load();
+                }}
+                onSave={async (itemsToSave) => {
+                  await Promise.all(
+                    itemsToSave.map((item, index) =>
+                      api.updateDocumentType(item.id, {
+                        name: item.name,
+                        sortOrder: index,
+                        isActive: true,
+                      }),
+                    ),
+                  );
+                  await load();
+                }}
+              />
+              <ReferenceListSettingEditor
+                items={obligationTypes}
+                label="Verplichtingstypen"
+                onCreate={async (name, sortOrder) => {
+                  await api.createObligationType({ name, sortOrder, isActive: true });
+                  await load();
+                }}
+                onDelete={async (id) => {
+                  await api.deleteObligationType(id);
+                  await load();
+                }}
+                onSave={async (itemsToSave) => {
+                  await Promise.all(
+                    itemsToSave.map((item, index) =>
+                      api.updateObligationType(item.id, {
+                        name: item.name,
+                        sortOrder: index,
+                        isActive: true,
+                      }),
+                    ),
+                  );
+                  await load();
+                }}
               />
               <NumberSettingEditor
                 description="Bepaalt hoeveel dagen vooruit het planningblok op het dashboard toont."
@@ -335,6 +343,7 @@ function StringListSettingEditor({
 }) {
   const [newValue, setNewValue] = useState("");
   const [draftValues, setDraftValues] = useState<string[]>(setting ? parseStringListSetting([setting], setting.key, fallback) : fallback);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setDraftValues(setting ? parseStringListSetting([setting], setting.key, fallback) : fallback);
@@ -368,24 +377,141 @@ function StringListSettingEditor({
         <input className="app-input max-w-sm" placeholder={`Nieuwe waarde voor ${label.toLowerCase()}`} value={newValue} onChange={(event) => setNewValue(event.target.value)} />
         <button
           className="app-button-secondary"
-          onClick={() => {
+          disabled={isSaving}
+          onClick={async () => {
             const trimmed = newValue.trim();
             if (!trimmed) {
               return;
             }
-            setDraftValues((current) => [...new Set([...current, trimmed])].sort((left, right) => left.localeCompare(right, "nl")));
-            setNewValue("");
+
+            const nextValues = [...new Set([...draftValues, trimmed])].sort((left, right) => left.localeCompare(right, "nl"));
+            setIsSaving(true);
+            try {
+              await onSave(setting, nextValues);
+              setDraftValues(nextValues);
+              setNewValue("");
+            } finally {
+              setIsSaving(false);
+            }
           }}
           type="button"
         >
-          Toevoegen
+          {isSaving ? "Opslaan..." : "Toevoegen"}
         </button>
         <button
           className="app-button"
-          onClick={() => onSave(setting, draftValues.map((item) => item.trim()).filter(Boolean))}
+          disabled={isSaving}
+          onClick={async () => {
+            setIsSaving(true);
+            try {
+              await onSave(setting, draftValues.map((item) => item.trim()).filter(Boolean));
+            } finally {
+              setIsSaving(false);
+            }
+          }}
           type="button"
         >
-          Opslaan
+          {isSaving ? "Bezig..." : "Opslaan"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ReferenceListSettingEditor({
+  items,
+  label,
+  onCreate,
+  onDelete,
+  onSave,
+}: {
+  items: ReferenceItem[];
+  label: string;
+  onCreate: (name: string, sortOrder: number) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
+  onSave: (items: Array<{ id: number; name: string }>) => Promise<void>;
+}) {
+  const [newValue, setNewValue] = useState("");
+  const [draftItems, setDraftItems] = useState(items.map((item) => ({ id: item.id, name: item.name })));
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setDraftItems(items.map((item) => ({ id: item.id, name: item.name })));
+  }, [items]);
+
+  return (
+    <div className="space-y-3 rounded-[1.35rem] bg-white/65 p-4">
+      <div>
+        <div className="text-sm font-semibold text-stone-700">{label}</div>
+        <div className="mt-1 text-sm text-stone-500">Deze waarden verschijnen in dropdownvelden door de hele applicatie.</div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {draftItems.map((item) => (
+          <div className="flex items-center gap-2 rounded-full bg-sand-50 px-3 py-2 text-sm text-stone-700" key={item.id}>
+            <input
+              className="min-w-24 bg-transparent outline-none"
+              value={item.name}
+              onChange={(event) =>
+                setDraftItems((current) =>
+                  current.map((value) => (value.id === item.id ? { ...value, name: event.target.value } : value)),
+                )
+              }
+            />
+            <button
+              className="text-red-600"
+              disabled={isSaving}
+              onClick={async () => {
+                setIsSaving(true);
+                try {
+                  await onDelete(item.id);
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              type="button"
+            >
+              x
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <input className="app-input max-w-sm" placeholder={`Nieuwe waarde voor ${label.toLowerCase()}`} value={newValue} onChange={(event) => setNewValue(event.target.value)} />
+        <button
+          className="app-button-secondary"
+          disabled={isSaving}
+          onClick={async () => {
+            const trimmed = newValue.trim();
+            if (!trimmed) {
+              return;
+            }
+
+            setIsSaving(true);
+            try {
+              await onCreate(trimmed, draftItems.length);
+              setNewValue("");
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          type="button"
+        >
+          {isSaving ? "Opslaan..." : "Toevoegen"}
+        </button>
+        <button
+          className="app-button"
+          disabled={isSaving}
+          onClick={async () => {
+            setIsSaving(true);
+            try {
+              await onSave(draftItems.map((item) => ({ id: item.id, name: item.name.trim() })).filter((item) => item.name));
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          type="button"
+        >
+          {isSaving ? "Bezig..." : "Opslaan"}
         </button>
       </div>
     </div>
